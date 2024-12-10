@@ -1,0 +1,50 @@
+/* General Styles */
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 10px;
+    background-color: #d1d1d4;
+}
+
+header {
+    background-color: #007bff;
+    color: white;
+    padding: 1rem 2rem;
+    text-align: center;
+}
+
+nav {
+    display: flex;
+    justify-content: center;
+    margin-top: 1rem;
+}
+
+nav a {
+    text-decoration: none;
+    color: white;
+    margin: 0 1rem;
+    padding: 0.5rem 1rem;
+    background-color: #343a40;
+    border-radius: 5px;
+}
+
+nav a:hover {
+    background-color: #495057;
+}
+
+
+/* Dashboard Page Specific Styles */
+.content {
+    margin: 0 50px;
+}
+
+.dashboard-section {
+    margin-bottom: 20px;
+}
+
+#promotions-list,
+#orders-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+}

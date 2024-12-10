@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Customer</title>
+    <link rel="stylesheet" href="./Styles/customer.css">
+</head>
+<body>
+    <header>
+        <h1>Prizoscope Admin</h1>
+        <nav>
+            <a href="Customer.html">Customer</a>
+            <a href="Dashboard.html">Dashboard</a>
+            <a href="Catelog.html">Catalog</a>
+        </nav>
+    </header>
+    <div class="content">
+        <h2>Customer Service</h2>
+        <div id="customer-list" class="grid-container">
+            <!-- Chat cards will be dynamically added here -->
+        </div>
+    </div>
+
+    <!-- Popup Chat Window -->
+    <div id="chat-popup" class="popup" style="display: none;">
+        <div class="popup-content">
+            <h2 id="customer-name">Chat with Customer</h2>
+            <div id="chat-messages" class="chat-window">
+                <!-- Messages will appear here -->
+            </div>
+            <div class="chat-input">
+                <input type="text" id="chat-message-input" placeholder="Type a message">
+                <button onclick="sendMessage()">Send</button>
+            </div>
+            <button class="close-popup" onclick="closeChat()">Close Chat</button>
+        </div>
+    </div>
+
+    <script type="module" src="javascript.js"></script>
+</body>
+</html>

@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Add Items</title>
+    <link rel="stylesheet" href="./Styles/catelog.css">
+</head>
+<body>
+    <header>
+        <h1>Prizoscope Admin</h1>
+        <nav>
+            <a href="Customer.html">Customer</a>
+            <a href="Dashboard.html">Dashboard</a>
+            <a href="Catelog.html">Catalog</a>
+        </nav>
+    </header>
+    <div class="content">
+        <input type="text" id="search-bar" placeholder="Search items..." class="search-bar" oninput="searchItems()">
+        <div class="grid-container" id="item-grid">
+            <!-- Add Item Card -->
+            <div class="card add-card" onclick="showAddPopup()">
+                <div class="add-icon">+</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Popup for Adding/Editing Items -->
+    <div id="add-popup" class="popup">
+        <div class="popup-content">
+            <h2 id="popup-title">Add New Item</h2>
+            <label for="item-image">Image URL:</label>
+            <input type="text" id="item-image" placeholder="Enter image URL">
+            <label for="item-name">Item Name:</label>
+            <input type="text" id="item-name" placeholder="Enter item name">
+            <label for="item-price">Price:</label>
+            <input type="number" id="item-price" placeholder="Enter price">
+            <div class="popup-buttons">
+                <button id="save-item-btn" onclick="saveItem()">Save Item</button>
+                <button onclick="closePopup()">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Popup for Promotions -->
+    <div id="promotion-popup" class="popup">
+        <div class="popup-content">
+            <h2>Set Promotion</h2>
+            <label for="discount">Discount Price:</label>
+            <input type="number" id="discount" placeholder="Enter discounted price">
+            <label for="duration">Duration (hours):</label>
+            <input type="number" id="duration" placeholder="Enter duration in hours">
+            <div class="popup-buttons">
+                <button onclick="savePromotion()">Save Promotion</button>
+                <button onclick="closePromotionPopup()">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Popup for Delete Confirmation -->
+    <div id="delete-popup" class="popup">
+        <div class="popup-content">
+            <h2>Are you sure you want to delete this item?</h2>
+            <div class="popup-buttons">
+                <button id="confirm-delete-btn" onclick="confirmDeleteItem()">Delete</button>
+                <button onclick="closeDeletePopup()">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <script type="module" src="./Javascript/Catelog.js"></script>
+</body>
+</html>
