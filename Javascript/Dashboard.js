@@ -15,7 +15,7 @@ const firebaseConfig = {
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
-const itemsCollection = collection(db, "items"); // Adjust collection name if necessary
+const itemsCollection = collection(db, "items"); // Adjust collection if needed
 
 /**
  * Utility function to calculate the remaining time for promotions.
@@ -28,17 +28,16 @@ function getTimeRemaining(expirationTime) {
         return "Expired";
     }
 
-    const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-    const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+    const hours = Math.floor(diff / (1000 * 60 * 60));
     const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-    return `${days}d ${hours}h ${minutes}m remaining`;
+    return `${hours}h ${minutes}m remaining`;
 }
 
 /**
- * Load promotions from the Firestore database and display them.
+ * Load promotions from the database and display them in the promotions list.
  */
 async function loadPromotions() {
-    const promotionsList = document.getElementById("promotions-list");
+    const promotionsList = document.getElementById('promotions-list');
 
     if (!promotionsList) {
         console.warn("Element with ID 'promotions-list' not found.");
@@ -47,14 +46,14 @@ async function loadPromotions() {
 
     try {
         const querySnapshot = await getDocs(itemsCollection);
-        promotionsList.innerHTML = ""; // Clear the list
+        promotionsList.innerHTML = ''; // Clear the promotions list
 
         querySnapshot.forEach((docSnapshot) => {
             const data = docSnapshot.data();
 
             if (data.promotion) {
-                const promotionItem = document.createElement("div");
-                promotionItem.className = "promotion-item";
+                const promotionItem = document.createElement('div');
+                promotionItem.className = 'promotion-item';
                 promotionItem.innerHTML = `
                     <p><b>${data.name}</b></p>
                     <p>Discount Price: <b>₱${data.promotion.discount_price}</b></p>
@@ -66,7 +65,7 @@ async function loadPromotions() {
         });
     } catch (error) {
         console.error("Error loading promotions:", error);
-        promotionsList.innerHTML = "<p>Failed to load promotions. Please try again later.</p>";
+        promotionsList.innerHTML = '<p>Failed to load promotions. Please try again later.</p>';
     }
 }
 
@@ -74,16 +73,16 @@ async function loadPromotions() {
  * Load orders (dummy implementation for now).
  */
 async function loadOrders() {
-    const ordersList = document.getElementById("orders-list");
+    const ordersList = document.getElementById('orders-list');
 
     if (!ordersList) {
         console.warn("Element with ID 'orders-list' not found.");
         return;
     }
 
-    // Replace this with real Firestore data-fetching logic when ready
+    // Replace this with real order-loading logic when available
     try {
-        // Simulate fetching orders
+        // Simulate fetching orders (replace with actual Firestore logic)
         ordersList.innerHTML = `
             <div class="order-item">
                 <p><b>Order #12345</b></p>
@@ -98,12 +97,12 @@ async function loadOrders() {
         `;
     } catch (error) {
         console.error("Error loading orders:", error);
-        ordersList.innerHTML = "<p>Failed to load orders. Please try again later.</p>";
+        ordersList.innerHTML = '<p>Failed to load orders. Please try again later.</p>';
     }
 }
 
 // Initialize the dashboard
-document.addEventListener("DOMContentLoaded", () => {
+document.addEventListener('DOMContentLoaded', () => {
     loadPromotions();
     loadOrders();
 });
