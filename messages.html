@@ -16,16 +16,51 @@
         </nav>
     </header>
     <div class="content">
-        <div class="search-container">
-            <input type="text" id="search-bar" placeholder="Search users..." class="search-bar" oninput="searchUsers()">
+        <!-- Left side - User list container -->
+        <div class="user-list-container">
+            <div class="search-container">
+                <input type="text" id="search-bar" placeholder="Search users..." class="search-bar" oninput="searchUsers()">
+            </div>
+            <div id="user-list">
+                <!-- Dynamically populated user cards/messages -->
+                <div class="user-card" onclick="openChat('Jane')">
+                    <p class="user-name">Jane</p>
+                    <p class="user-last-message">Hello, I need help with my order delivery address.</p>
+                </div>
+                <div class="user-card" onclick="openChat('John')">
+                    <p class="user-name">John</p>
+                    <p class="user-last-message">Is there a way to track it?</p>
+                </div>
+                <!-- Add more users as needed -->
+            </div>
         </div>
-        <div id="user-list">
-            <!-- User cards will be dynamically populated here -->
-        </div>
+
+        <!-- Right side - Chat container -->
         <div id="chat-container" class="hidden">
             <h2 id="chat-header"></h2>
-            <div id="chat-messages">
-                <!-- Messages will be dynamically populated here -->
+            <div id="chat-messages" class="chat-window">
+                <div class="message-container">
+                    <div class="user-messages">
+                        <p class="message">
+                            Hello, I need help with my order delivery address.
+                            <button class="delete-btn" onclick="deleteMessage(this)">Delete</button>
+                        </p>
+                        <p class="message">
+                            Is there a way to track it?
+                            <button class="delete-btn" onclick="deleteMessage(this)">Delete</button>
+                        </p>
+                    </div>
+                    <div class="admin-messages">
+                        <p class="message">
+                            Hi Jane, I’ll be happy to assist you.
+                            <button class="delete-btn" onclick="deleteMessage(this)">Delete</button>
+                        </p>
+                        <p class="message">
+                            Yes, you can track your order using the link provided in your email.
+                            <button class="delete-btn" onclick="deleteMessage(this)">Delete</button>
+                        </p>
+                    </div>
+                </div>
             </div>
             <div class="message-input-container">
                 <textarea id="admin-message" placeholder="Type your message here..."></textarea>
@@ -34,6 +69,32 @@
         </div>
     </div>
 
-    <script type="module" src="./Javascript/messages.js"></script>
+    <script>
+        // Function to open the chat with a specific user
+        function openChat(userName) {
+            document.getElementById("chat-header").innerText = "Chat with " + userName;
+            document.getElementById("chat-container").classList.remove("hidden");
+        }
+
+        // Function to delete a message
+        function deleteMessage(button) {
+            const message = button.parentElement;
+            message.remove();
+        }
+
+        // Function to simulate sending a message (add it to the chat)
+        function sendAdminMessage() {
+            const message = document.getElementById("admin-message").value;
+            const chatMessages = document.getElementById("chat-messages");
+
+            if (message) {
+                const adminMessage = document.createElement("p");
+                adminMessage.classList.add("message", "admin-messages");
+                adminMessage.innerHTML = message + '<button class="delete-btn" onclick="deleteMessage(this)">Delete</button>';
+                chatMessages.appendChild(adminMessage);
+                document.getElementById("admin-message").value = ''; // Clear input
+            }
+        }
+    </script>
 </body>
 </html>

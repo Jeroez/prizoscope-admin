@@ -3,49 +3,67 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Customer Service</title>
+    <title>Prizoscope Admin Portal</title>
     <link rel="stylesheet" href="./Styles/customer.css">
 </head>
 <body>
     <header>
-        <h1>Prizoscope Admin</h1>
-        <nav>
-            <a href="messages.html">Customer</a>
-            <a href="Dashboard.html">Dashboard</a>
-            <a href="Catelog.html">Catalog</a>
-        </nav>
+        <div class="header-container">
+            <h1 class="site-title">Prizoscope Admin Portal</h1>
+            <nav class="main-navigation">
+                <ul class="nav-links">
+                    <li><a href="messages.html">Customer</a></li>
+                    <li><a href="Dashboard.html">Dashboard</a></li>
+                    <li><a href="Catelog.html">Catalog</a></li>
+                </ul>
+            </nav>
+        </div>
     </header>
-    <div class="content">
-        <h2>Customer Service</h2>
-        <p class="subtitle">Manage and assist your customers efficiently.</p>
 
-        <div id="customer-list" class="grid-container">
-            <!-- Sample Customer Card -->
-            <div class="customer-card">
+    <main class="content">
+        <section class="intro">
+            <h2 class="section-title">Customer Service</h2>
+            <p class="subtitle">Streamline customer management and enhance service efficiency.</p>
+        </section>
+
+        <section id="customer-list" class="grid-container">
+            <!-- Example Customer Card -->
+            <article class="customer-card">
                 <div class="customer-info">
                     <h3>Jane Doe</h3>
-                    <p>Last active: 5 minutes ago</p>
+                    <p class="last-active">Last active: 5 minutes ago</p>
                 </div>
                 <button class="chat-btn" onclick="openChat('Jane Doe')">Open Chat</button>
-            </div>
-            <!-- Add more customer cards dynamically -->
-        </div>
-    </div>
+            </article>
+            <!-- Additional customer cards will be added dynamically -->
+        </section>
+    </main>
 
     <!-- Popup Chat Window -->
     <div id="chat-popup" class="popup" style="display: none;">
         <div class="popup-content">
-            <div class="chat-header">
+            <header class="chat-header">
                 <h2 id="customer-name">Chat with Jane Doe</h2>
-                <button class="close-popup" onclick="closeChat()">&times;</button>
-            </div>
+                <button class="close-popup" onclick="closeChat()" aria-label="Close chat window">&times;</button>
+            </header>
             <div id="chat-messages" class="chat-window">
-                <!-- Chat messages will appear here dynamically -->
+                <div class="message-container">
+                    <div class="user-messages">
+                        <!-- User messages -->
+                        <p class="message">Hello, I need help with my order.</p>
+                        <p class="message">Is there a way to track it?</p>
+                    </div>
+                    <div class="admin-messages">
+                        <!-- Admin messages -->
+                        <p class="message">Hi Jane, I’ll be happy to assist you.</p>
+                        <p class="message">Yes, you can track your order using the link provided in your email.</p>
+                    </div>
+                </div>
             </div>
-            <div class="chat-input">
+            <footer class="chat-input">
                 <input type="text" id="chat-message-input" placeholder="Type a message...">
                 <button class="send-btn" onclick="sendMessage()">Send</button>
-            </div>
+            </footer>
         </div>
     </div>
 

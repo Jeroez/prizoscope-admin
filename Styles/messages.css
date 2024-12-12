@@ -13,6 +13,7 @@ body {
     margin: 0;
 }
 
+/* Header Styling */
 header {
     background-color: #1d2c4d;
     color: #ffffff;
@@ -50,11 +51,16 @@ nav a.active {
     font-weight: bold;
 }
 
+/* Content Styling */
 .content {
     padding: 20px 10%;
-    display: grid;
-    grid-template-columns: 1fr;
+    display: flex;
+    flex-direction: column;
     gap: 20px;
+}
+
+.search-container {
+    flex: 1;
 }
 
 .search-bar {
@@ -66,143 +72,269 @@ nav a.active {
     border-radius: 6px;
     background-color: #1d2c4d;
     color: #ffffff;
+    transition: border-color 0.3s;
 }
 
 .search-bar::placeholder {
     color: #7a8fb6;
 }
 
-.grid-container {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-    gap: 20px;
+.search-bar:focus {
+    border-color: #2b80ff;
 }
 
-.message-item {
-    background-color: #253655;
-    padding: 20px;
-    border-radius: 8px;
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
-    transition: transform 0.3s, background-color 0.3s;
+#chat-container {
+    flex: 2;
     display: flex;
     flex-direction: column;
-    justify-content: space-between;
-}
-
-.message-item:hover {
-    transform: translateY(-5px);
-    background-color: #2b80ff;
-}
-
-.message-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 15px;
-}
-
-.sender-name {
-    font-size: 1.2rem;
-    font-weight: bold;
-    color: #ffffff;
-}
-
-.message-time {
-    font-size: 0.9rem;
-    color: #b0c4de;
-}
-
-.message-preview {
-    font-size: 1rem;
-    color: #cfd8e3;
-    margin-bottom: 20px;
-}
-
-.delete-btn {
-    align-self: flex-end;
-    background-color: #ff4c4c;
-    color: #ffffff;
-    padding: 10px 15px;
-    font-size: 1rem;
-    border: none;
-    border-radius: 6px;
-    cursor: pointer;
-    transition: background-color 0.3s;
-}
-
-.delete-btn:hover {
-    background-color: #e63939;
-}
-
-.popup {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(0, 0, 0, 0.7);
-    display: none;
-    justify-content: center;
-    align-items: center;
-    z-index: 1000;
-}
-
-.popup-content {
-    background-color: #1d2c4d;
-    padding: 20px;
-    border-radius: 8px;
-    text-align: center;
-    width: 90%;
-    max-width: 400px;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
-}
-
-.popup-content h2 {
-    margin-bottom: 20px;
-    font-size: 1.5rem;
-    color: #ffffff;
-}
-
-.popup-buttons {
-    display: flex;
-    justify-content: space-between;
     gap: 15px;
 }
 
-.confirm-btn {
-    flex: 1;
-    background-color: #ff4c4c;
-    color: #ffffff;
+.chat-window {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    background-color: #1d2c4d;
     padding: 10px;
-    font-size: 1rem;
-    border: none;
-    border-radius: 6px;
-    cursor: pointer;
-    transition: background-color 0.3s;
+    border-radius: 8px;
+    max-height: 400px;
+    overflow-y: auto;
 }
 
-.confirm-btn:hover {
+/* Message Container */
+.message-container {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+/* User Messages */
+.user-messages .message {
+    background-color: #253655;
+    color: #ffffff;
+    padding: 10px 15px;
+    border-radius: 15px;
+    max-width: 60%;
+    align-self: flex-start;
+    position: relative;
+    margin-bottom: 10px;
+}
+
+.user-messages .message .delete-btn {
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    background-color: #ff4c4c;
+    color: #ffffff;
+    border: none;
+    padding: 5px;
+    font-size: 0.8rem;
+    border-radius: 4px;
+    cursor: pointer;
+    display: none;
+}
+
+.user-messages .message:hover .delete-btn {
+    display: block;
+}
+
+.user-messages .message .delete-btn:hover {
     background-color: #e63939;
 }
 
-.cancel-btn {
+/* Admin Messages */
+.admin-messages .message {
+    background-color: #2b80ff;
+    color: #ffffff;
+    padding: 10px 15px;
+    border-radius: 15px;
+    max-width: 60%;
+    align-self: flex-end;
+    text-align: right;
+    margin-bottom: 10px;
+    position: relative;
+}
+
+.admin-messages .message .delete-btn {
+    position: absolute;
+    top: 5px;
+    left: 5px;
+    background-color: #ff4c4c;
+    color: #ffffff;
+    border: none;
+    padding: 5px;
+    font-size: 0.8rem;
+    border-radius: 4px;
+    cursor: pointer;
+    display: none;
+}
+
+.admin-messages .message:hover .delete-btn {
+    display: block;
+}
+
+.admin-messages .message .delete-btn:hover {
+    background-color: #e63939;
+}
+
+/* Message Input Styling */
+.message-input-container {
+    display: flex;
+    gap: 10px;
+    margin-top: 15px;
+}
+
+textarea#admin-message {
     flex: 1;
-    background-color: #2a3c5b;
+    border: 1px solid #2a3c5b;
+    border-radius: 6px;
+    background-color: #253655;
     color: #ffffff;
     padding: 10px;
-    font-size: 1rem;
+    resize: none;
+    transition: border-color 0.3s;
+}
+
+textarea#admin-message::placeholder {
+    color: #7a8fb6;
+}
+
+textarea#admin-message:focus {
+    border-color: #2b80ff;
+}
+
+button#send-button {
+    background-color: #2b80ff;
+    color: white;
     border: none;
+    padding: 10px 15px;
     border-radius: 6px;
+    font-size: 1rem;
     cursor: pointer;
     transition: background-color 0.3s;
 }
 
-.cancel-btn:hover {
+button#send-button:hover {
+    background-color: #236adf;
+}
+
+/* User List Container */
+.user-list-container {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    background-color: #1d2c4d;
+    padding: 20px;
+    border-radius: 8px;
+    max-height: 500px;
+    overflow-y: auto;
+}
+
+/* User Card */
+.user-card {
+    background-color: #253655;
+    color: #ffffff;
+    padding: 15px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.user-card:hover {
     background-color: #334566;
 }
 
+/* User Name */
+.user-card .user-name {
+    font-weight: bold;
+    font-size: 1.1rem;
+    margin: 0;
+}
+
+/* User Last Message */
+.user-card .user-last-message {
+    color: #7a8fb6;
+    font-size: 0.9rem;
+    margin: 0;
+}
+
+/* Search Bar Container */
+.search-container {
+    flex: 1;
+    margin-bottom: 20px;
+}
+
+/* Search Bar Styling */
+.search-bar {
+    width: 100%;
+    padding: 12px;
+    font-size: 1rem;
+    margin-bottom: 20px;
+    border: 1px solid #2a3c5b;
+    border-radius: 6px;
+    background-color: #253655;
+    color: #ffffff;
+    transition: border-color 0.3s;
+}
+
+.search-bar::placeholder {
+    color: #7a8fb6;
+}
+
+.search-bar:focus {
+    border-color: #2b80ff;
+}
+
+/* Scrollbar for User List */
+.user-list-container::-webkit-scrollbar {
+    width: 8px;
+}
+
+.user-list-container::-webkit-scrollbar-thumb {
+    background-color: #2b80ff;
+    border-radius: 10px;
+}
+
+.user-list-container::-webkit-scrollbar-track {
+    background-color: #1d2c4d;
+}
+
+
+/* Responsive Design */
 @media (min-width: 768px) {
-    .grid-container {
-        grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+    .content {
+        flex-direction: row;
+    }
+    .search-container {
+        flex: 1;
+    }
+    #chat-container {
+        flex: 2;
+    }
+}
+
+@media (max-width: 767px) {
+    /* Ensure search bar takes full width on small screens */
+    .search-container {
+        width: 100%;
+    }
+
+    .search-bar {
+        font-size: 0.9rem;
+    }
+
+    /* Adjust message bubbles */
+    .user-messages .message,
+    .admin-messages .message {
+        max-width: 85%;
+    }
+
+    /* Increase spacing for better readability */
+    .message-container {
+        gap: 20px;
     }
 }
