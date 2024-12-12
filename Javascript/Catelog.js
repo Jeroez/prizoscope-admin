@@ -27,6 +27,7 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // Load items from the database and render them
+// Load items from the database and render them
 async function loadItems() {
     const itemGrid = document.getElementById('item-grid');
     if (!itemGrid) {
@@ -34,7 +35,7 @@ async function loadItems() {
         return;
     }
 
-    const now = Date.now(); // Define 'now' for promotion expiration checks
+    const now = Date.now(); // For promotion expiration checks
 
     // Reset the item grid
     itemGrid.innerHTML = `
@@ -47,36 +48,36 @@ async function loadItems() {
         const querySnapshot = await getDocs(itemsCollection);
 
         querySnapshot.forEach(async (docSnapshot) => {
+            const itemName = docSnapshot.id; // Use the document name as the item's name
             const data = docSnapshot.data();
 
-            // Check if promotion exists and calculate remaining time
-            const promotion = data.promotion;
-            const remainingTime = promotion
-                ? `<p class="promotion-time">${getTimeRemaining(promotion.expiration_time)}</p>`
-                : "";
-
-            if (promotion && promotion.expiration_time < now) {
-                const itemDocRef = doc(db, "items", docSnapshot.id);
+            // Check for expired promotions
+            if (data.promotion && data.promotion.expiration_time < now) {
+                const itemDocRef = doc(db, "items", itemName);
                 await updateDoc(itemDocRef, { promotion: deleteField() });
                 return;
             }
 
-            // Create the item card
+            // Render the item card
             const itemCard = document.createElement('div');
             itemCard.className = 'card item-card';
 
-            const priceHTML = promotion
-                ? `<p class="item-price"><s>₱${data.price}</s> <b>₱${promotion.discount_price}</b></p>`
+            const priceHTML = data.promotion
+                ? `<p class="item-price"><s>₱${data.price}</s> <b>₱${data.promotion.discount_price}</b></p>`
                 : `<p class="item-price">₱${data.price}</p>`;
 
+            const remainingTime = data.promotion
+                ? `<p class="promotion-time">${getTimeRemaining(data.promotion.expiration_time)}</p>`
+                : "";
+
             itemCard.innerHTML = `
-                <img src="${data.img_url}" class="item-image" alt="${data.name}">
-                <h3 class="item-name">${data.name}</h3>
+                <img src="${data.img_url}" class="item-image" alt="${itemName}">
+                <h3 class="item-name">${itemName}</h3>
                 ${priceHTML}
                 ${remainingTime}
-                <button onclick="editItem('${docSnapshot.id}')">Edit</button>
-                <button onclick="showDeletePopup('${docSnapshot.id}')">Delete</button>
-                <button onclick="showPromotionPopup('${docSnapshot.id}')">Set Promotion</button>
+                <button onclick="editItem('${itemName}')">Edit</button>
+                <button onclick="showDeletePopup('${itemName}')">Delete</button>
+                <button onclick="showPromotionPopup('${itemName}')">Set Promotion</button>
             `;
 
             itemGrid.appendChild(itemCard);
@@ -173,12 +174,21 @@ async function savePromotion() {
 
     try {
         const itemDocRef = doc(db, "items", itemId);
-        await updateDoc(itemDocRef, {
-            promotion: {
-                discount_price: parseFloat(discount),
-                expiration_time: expirationTime,
-            },
+        const promotionData = {
+            discount_price: parseFloat(discount),
+            expiration_time: expirationTime,
+        };
+
+        // Save to item
+        await updateDoc(itemDocRef, { promotion: promotionData });
+
+        // Save to promotions collection
+        const promotionsCollection = collection(db, "promotions");
+        await addDoc(promotionsCollection, {
+            item_id: itemId,
+            ...promotionData,
         });
+
         alert("Promotion set successfully!");
         closePromotionPopup();
         loadItems();
@@ -205,39 +215,34 @@ function closeDeletePopup() {
 async function confirmDeleteItem() {
     if (itemToDeleteId) {
         try {
-            await deleteDoc(doc(db, "items", itemToDeleteId));
+            const itemDocRef = doc(db, "items", itemToDeleteId); // Use item name as the document ID
+            await deleteDoc(itemDocRef);
             alert("Item deleted successfully!");
             closeDeletePopup();
             loadItems(); // Refresh the item list
         } catch (error) {
-            console.error("Error deleting item: ", error);
+            console.error("Error deleting item:", error);
             alert("Failed to delete the item. Please try again.");
         }
     }
 }
 
-async function editItem(itemId) {
-    try {
-        // Reference to the Firestore document for the item
-        const itemDocRef = doc(db, "items", itemId);
 
-        // Fetch the document snapshot
+async function editItem(itemName) {
+    try {
+        const itemDocRef = doc(db, "items", itemName); // Reference by item name
         const docSnap = await getDoc(itemDocRef);
 
         if (docSnap.exists()) {
             const data = docSnap.data();
 
-            // Populate the popup fields with current item data
             document.getElementById('popup-title').textContent = "Edit Item";
             document.getElementById('item-image').value = data.img_url || "";
             document.getElementById('item-name').value = data.name || "";
             document.getElementById('item-price').value = data.price || "";
 
-            // Attach the item ID to the popup to distinguish between adding and editing
             const popup = document.getElementById('add-popup');
-            popup.setAttribute('data-edit-item-id', itemId);
-
-            // Show the popup
+            popup.setAttribute('data-edit-item-id', itemName); // Attach item name for editing
             popup.style.display = "flex";
         } else {
             alert("Item not found!");
@@ -249,40 +254,38 @@ async function editItem(itemId) {
 }
 
 
+
 async function saveItem() {
-    // Get popup elements
     const imageInput = document.getElementById('item-image');
     const nameInput = document.getElementById('item-name');
     const priceInput = document.getElementById('item-price');
 
-    // Validate inputs
     const imgURL = imageInput.value.trim();
     const name = nameInput.value.trim();
     const price = parseFloat(priceInput.value);
 
     if (!imgURL || !name || isNaN(price)) {
-        alert("All fields are required and price must be a number!");
+        alert("All fields are required, and price must be a valid number!");
         return;
     }
 
     try {
-        // Check if editing or adding a new item
         const popup = document.getElementById('add-popup');
-        const editItemId = popup.getAttribute('data-edit-item-id');
+        const editItemName = popup.getAttribute('data-edit-item-id');
 
-        if (editItemId) {
+        if (editItemName) {
             // Update existing item
-            const itemDocRef = doc(db, "items", editItemId);
-            await updateDoc(itemDocRef, { img_url: imgURL, name: name, price: price });
+            const itemDocRef = doc(db, "items", editItemName);
+            await updateDoc(itemDocRef, { img_url: imgURL, price, name });
             alert("Item updated successfully!");
             popup.removeAttribute('data-edit-item-id'); // Clear edit context
         } else {
-            // Add new item
-            await addDoc(itemsCollection, { img_url: imgURL, name: name, price: price });
+            // Add a new item
+            const itemDocRef = doc(db, "items", name); // Use item name as the document ID
+            await setDoc(itemDocRef, { img_url: imgURL, price, name });
             alert("Item added successfully!");
         }
 
-        // Close popup and refresh items
         closePopup();
         loadItems();
     } catch (error) {
@@ -290,6 +293,7 @@ async function saveItem() {
         alert("Failed to save item. Please try again.");
     }
 }
+
 
 
 
