@@ -8,333 +8,215 @@
 body {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     background-color: #101828;
-    color: #ffffff;
-    line-height: 1.6;
-    margin: 0;
+    color: white;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
 }
 
-/* Header Styling */
-header {
+/* Header */
+.header {
     background-color: #1d2c4d;
-    color: #ffffff;
-    padding: 20px 10%;
+    padding: 15px 20px;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    border-bottom: 3px solid #2a3c5b;
+    border-bottom: 2px solid #2a3c5b;
 }
 
-header h1 {
-    font-size: 1.8rem;
+.site-title {
+    font-size: 1.5rem;
     font-weight: bold;
+    color: white;
 }
 
-nav {
+.main-navigation {
+    display: flex;
+}
+
+.nav-links {
+    list-style: none;
     display: flex;
     gap: 15px;
 }
 
-nav a {
-    color: #ffffff;
+.header-nav-link {
+    color: white;
     text-decoration: none;
-    padding: 8px 14px;
-    border-radius: 4px;
-    transition: background-color 0.3s, color 0.3s;
+    padding: 8px 15px;
+    border-radius: 5px;
+    transition: background-color 0.3s;
 }
 
-nav a:hover {
+.header-nav-link:hover {
     background-color: #334566;
 }
 
-nav a.active {
-    background-color: #2b80ff;
+.header-nav-link.active {
+    background-color: #1e90ff;
     font-weight: bold;
 }
 
-/* Content Styling */
-.content {
-    padding: 20px 10%;
+/* Main Layout */
+.main-layout {
     display: flex;
-    flex-direction: column;
-    gap: 20px;
+    flex: 1;
+    height: calc(100vh - 60px); /* Adjusted for header height */
+    overflow: hidden;
 }
 
-.search-container {
-    flex: 1;
+/* User Sidebar */
+.user-sidebar {
+    width: 30%;
+    background-color: #1d2c4d;
+    display: flex;
+    flex-direction: column;
+    padding: 15px;
+    border-right: 2px solid #2a3c5b;
+    overflow-y: auto;
 }
 
 .search-bar {
     width: 100%;
-    padding: 12px;
-    font-size: 1rem;
-    margin-bottom: 20px;
+    padding: 10px;
+    border-radius: 5px;
+    background-color: #253655;
     border: 1px solid #2a3c5b;
-    border-radius: 6px;
-    background-color: #1d2c4d;
-    color: #ffffff;
-    transition: border-color 0.3s;
+    color: white;
+    margin-bottom: 15px;
 }
 
 .search-bar::placeholder {
     color: #7a8fb6;
 }
 
-.search-bar:focus {
-    border-color: #2b80ff;
-}
-
-#chat-container {
-    flex: 2;
-    display: flex;
-    flex-direction: column;
-    gap: 15px;
-}
-
-.chat-window {
+.user-list-container {
     display: flex;
     flex-direction: column;
     gap: 10px;
-    background-color: #1d2c4d;
-    padding: 10px;
-    border-radius: 8px;
-    max-height: 400px;
-    overflow-y: auto;
 }
 
-/* Message Container */
-.message-container {
+.user-card {
     display: flex;
-    flex-direction: column;
-    gap: 15px;
-}
-
-/* User Messages */
-.user-messages .message {
-    background-color: #253655;
-    color: #ffffff;
-    padding: 10px 15px;
-    border-radius: 15px;
-    max-width: 60%;
-    align-self: flex-start;
-    position: relative;
-    margin-bottom: 10px;
-}
-
-.user-messages .message .delete-btn {
-    position: absolute;
-    top: 5px;
-    right: 5px;
-    background-color: #ff4c4c;
-    color: #ffffff;
-    border: none;
-    padding: 5px;
-    font-size: 0.8rem;
-    border-radius: 4px;
-    cursor: pointer;
-    display: none;
-}
-
-.user-messages .message:hover .delete-btn {
-    display: block;
-}
-
-.user-messages .message .delete-btn:hover {
-    background-color: #e63939;
-}
-
-/* Admin Messages */
-.admin-messages .message {
-    background-color: #2b80ff;
-    color: #ffffff;
-    padding: 10px 15px;
-    border-radius: 15px;
-    max-width: 60%;
-    align-self: flex-end;
-    text-align: right;
-    margin-bottom: 10px;
-    position: relative;
-}
-
-.admin-messages .message .delete-btn {
-    position: absolute;
-    top: 5px;
-    left: 5px;
-    background-color: #ff4c4c;
-    color: #ffffff;
-    border: none;
-    padding: 5px;
-    font-size: 0.8rem;
-    border-radius: 4px;
-    cursor: pointer;
-    display: none;
-}
-
-.admin-messages .message:hover .delete-btn {
-    display: block;
-}
-
-.admin-messages .message .delete-btn:hover {
-    background-color: #e63939;
-}
-
-/* Message Input Styling */
-.message-input-container {
-    display: flex;
+    align-items: center;
     gap: 10px;
-    margin-top: 15px;
-}
-
-textarea#admin-message {
-    flex: 1;
-    border: 1px solid #2a3c5b;
+    padding: 10px;
     border-radius: 6px;
     background-color: #253655;
-    color: #ffffff;
-    padding: 10px;
-    resize: none;
-    transition: border-color 0.3s;
-}
-
-textarea#admin-message::placeholder {
-    color: #7a8fb6;
-}
-
-textarea#admin-message:focus {
-    border-color: #2b80ff;
-}
-
-button#send-button {
-    background-color: #2b80ff;
-    color: white;
-    border: none;
-    padding: 10px 15px;
-    border-radius: 6px;
-    font-size: 1rem;
     cursor: pointer;
     transition: background-color 0.3s;
-}
-
-button#send-button:hover {
-    background-color: #236adf;
-}
-
-/* User List Container */
-.user-list-container {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    gap: 20px;
-    background-color: #1d2c4d;
-    padding: 20px;
-    border-radius: 8px;
-    max-height: 500px;
-    overflow-y: auto;
-}
-
-/* User Card */
-.user-card {
-    background-color: #253655;
-    color: #ffffff;
-    padding: 15px;
-    border-radius: 8px;
-    cursor: pointer;
-    transition: background-color 0.3s ease;
-    display: flex;
-    flex-direction: column;
-    gap: 5px;
 }
 
 .user-card:hover {
     background-color: #334566;
 }
 
-/* User Name */
-.user-card .user-name {
-    font-weight: bold;
-    font-size: 1.1rem;
-    margin: 0;
-}
-
-/* User Last Message */
-.user-card .user-last-message {
-    color: #7a8fb6;
-    font-size: 0.9rem;
-    margin: 0;
-}
-
-/* Search Bar Container */
-.search-container {
-    flex: 1;
-    margin-bottom: 20px;
-}
-
-/* Search Bar Styling */
-.search-bar {
-    width: 100%;
-    padding: 12px;
-    font-size: 1rem;
-    margin-bottom: 20px;
-    border: 1px solid #2a3c5b;
-    border-radius: 6px;
-    background-color: #253655;
-    color: #ffffff;
-    transition: border-color 0.3s;
-}
-
-.search-bar::placeholder {
-    color: #7a8fb6;
-}
-
-.search-bar:focus {
-    border-color: #2b80ff;
-}
-
-/* Scrollbar for User List */
-.user-list-container::-webkit-scrollbar {
-    width: 8px;
-}
-
-.user-list-container::-webkit-scrollbar-thumb {
+.user-card.active {
     background-color: #2b80ff;
-    border-radius: 10px;
 }
 
-.user-list-container::-webkit-scrollbar-track {
+.user-avatar {
+    width: 40px;
+    height: 40px;
+    background-color: #7a8fb6;
+    border-radius: 50%;
+}
+
+.user-info {
+    display: flex;
+    flex-direction: column;
+}
+
+.user-name {
+    font-weight: bold;
+    font-size: 1rem;
+    margin: 0;
+}
+
+.last-message {
+    color: #7a8fb6;
+    font-size: 0.85rem;
+    margin: 0;
+}
+
+/* Chat Area */
+.chat-area {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    background-color: #101828;
+}
+
+.chat-header {
+    padding: 15px;
     background-color: #1d2c4d;
+    border-bottom: 2px solid #2a3c5b;
+    font-size: 1.2rem;
+    font-weight: bold;
 }
 
-
-/* Responsive Design */
-@media (min-width: 768px) {
-    .content {
-        flex-direction: row;
-    }
-    .search-container {
-        flex: 1;
-    }
-    #chat-container {
-        flex: 2;
-    }
+.chat-window {
+    flex: 1;
+    padding: 15px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
 }
 
-@media (max-width: 767px) {
-    /* Ensure search bar takes full width on small screens */
-    .search-container {
-        width: 100%;
-    }
+.message {
+    max-width: 70%;
+    padding: 10px 15px;
+    border-radius: 6px;
+    font-size: 0.95rem;
+}
 
-    .search-bar {
-        font-size: 0.9rem;
-    }
+.user-message {
+    background-color: #253655;
+    color: white;
+    align-self: flex-start;
+}
 
-    /* Adjust message bubbles */
-    .user-messages .message,
-    .admin-messages .message {
-        max-width: 85%;
-    }
+.admin-message {
+    background-color: #2b80ff;
+    color: white;
+    align-self: flex-end;
+    text-align: right;
+}
 
-    /* Increase spacing for better readability */
-    .message-container {
-        gap: 20px;
-    }
+/* Chat Input */
+.chat-input {
+    display: flex;
+    padding: 15px;
+    background-color: #1d2c4d;
+    gap: 10px;
+    border-top: 2px solid #2a3c5b;
+}
+
+.chat-input textarea {
+    flex: 1;
+    border: 1px solid #2a3c5b;
+    border-radius: 5px;
+    padding: 10px;
+    background-color: #253655;
+    color: white;
+    resize: none;
+}
+
+.chat-input textarea::placeholder {
+    color: #7a8fb6;
+}
+
+.chat-input button {
+    padding: 10px 20px;
+    background-color: #2b80ff;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.chat-input button:hover {
+    background-color: #236adf;
 }

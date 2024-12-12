@@ -3,98 +3,45 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Panel - Messages</title>
+    <title>Prizoscope Admin Portal</title>
     <link rel="stylesheet" href="./Styles/messages.css">
 </head>
 <body>
-    <header>
-        <h1>Prizoscope Admin</h1>
-        <nav>
-            <a href="messages.html" class="active">Customer</a>
-            <a href="Dashboard.html">Dashboard</a>
-            <a href="Catelog.html">Catalog</a>
+    <header class="header">
+        <h1 class="site-title">Prizoscope Admin Portal</h1>
+        <nav class="main-navigation">
+            <ul class="nav-links">
+                <li><a href="messages.html" class="header-nav-link active">Customer</a></li>
+                <li><a href="Dashboard.html" class="header-nav-link">Dashboard</a></li>
+                <li><a href="Catelog.html" class="header-nav-link">Catalog</a></li>
+            </ul>
         </nav>
     </header>
-    <div class="content">
-        <!-- Left side - User list container -->
-        <div class="user-list-container">
-            <div class="search-container">
-                <input type="text" id="search-bar" placeholder="Search users..." class="search-bar" oninput="searchUsers()">
-            </div>
-            <div id="user-list">
-                <!-- Dynamically populated user cards/messages -->
-                <div class="user-card" onclick="openChat('Jane')">
-                    <p class="user-name">Jane</p>
-                    <p class="user-last-message">Hello, I need help with my order delivery address.</p>
-                </div>
-                <div class="user-card" onclick="openChat('John')">
-                    <p class="user-name">John</p>
-                    <p class="user-last-message">Is there a way to track it?</p>
-                </div>
-                <!-- Add more users as needed -->
-            </div>
-        </div>
 
-        <!-- Right side - Chat container -->
-        <div id="chat-container" class="hidden">
-            <h2 id="chat-header"></h2>
-            <div id="chat-messages" class="chat-window">
-                <div class="message-container">
-                    <div class="user-messages">
-                        <p class="message">
-                            Hello, I need help with my order delivery address.
-                            <button class="delete-btn" onclick="deleteMessage(this)">Delete</button>
-                        </p>
-                        <p class="message">
-                            Is there a way to track it?
-                            <button class="delete-btn" onclick="deleteMessage(this)">Delete</button>
-                        </p>
-                    </div>
-                    <div class="admin-messages">
-                        <p class="message">
-                            Hi Jane, I’ll be happy to assist you.
-                            <button class="delete-btn" onclick="deleteMessage(this)">Delete</button>
-                        </p>
-                        <p class="message">
-                            Yes, you can track your order using the link provided in your email.
-                            <button class="delete-btn" onclick="deleteMessage(this)">Delete</button>
-                        </p>
-                    </div>
-                </div>
+    <main class="main-layout">
+        <!-- Sidebar for User List -->
+        <section class="user-sidebar">
+            <input type="text" id="search-bar" class="search-bar" placeholder="Search users..." oninput="searchUsers()">
+            <div class="user-list-container" id="user-list">
+                <!-- User cards will be dynamically loaded here -->
             </div>
-            <div class="message-input-container">
+        </section>
+
+        <!-- Chat Area -->
+        <section class="chat-area">
+            <header class="chat-header">
+                <h2 id="chat-with-user">Chat with [User]</h2>
+            </header>
+            <div class="chat-window" id="chat-messages">
+                <!-- Messages will be dynamically loaded here -->
+            </div>
+            <footer class="chat-input">
                 <textarea id="admin-message" placeholder="Type your message here..."></textarea>
                 <button id="send-button" onclick="sendAdminMessage()">Send</button>
-            </div>
-        </div>
-    </div>
+            </footer>
+        </section>
+    </main>
 
-    <script>
-        // Function to open the chat with a specific user
-        function openChat(userName) {
-            document.getElementById("chat-header").innerText = "Chat with " + userName;
-            document.getElementById("chat-container").classList.remove("hidden");
-        }
-
-        // Function to delete a message
-        function deleteMessage(button) {
-            const message = button.parentElement;
-            message.remove();
-        }
-
-        // Function to simulate sending a message (add it to the chat)
-        function sendAdminMessage() {
-            const message = document.getElementById("admin-message").value;
-            const chatMessages = document.getElementById("chat-messages");
-
-            if (message) {
-                const adminMessage = document.createElement("p");
-                adminMessage.classList.add("message", "admin-messages");
-                adminMessage.innerHTML = message + '<button class="delete-btn" onclick="deleteMessage(this)">Delete</button>';
-                chatMessages.appendChild(adminMessage);
-                document.getElementById("admin-message").value = ''; // Clear input
-            }
-        }
-    </script>
+    <script type="module" src="./Javascript/messages.js"></script>
 </body>
 </html>
