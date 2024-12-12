@@ -38,30 +38,37 @@ function getTimeRemaining(expirationTime) {
  */
 async function loadPromotions() {
     const promotionsList = document.getElementById('promotions-list');
-
     if (!promotionsList) {
         console.warn("Element with ID 'promotions-list' not found.");
         return;
     }
 
     try {
-        const querySnapshot = await getDocs(itemsCollection);
-        promotionsList.innerHTML = ''; // Clear the promotions list
+        const promotionsCollection = collection(db, "promotions");
+        const querySnapshot = await getDocs(promotionsCollection);
+        promotionsList.innerHTML = ''; // Clear the list
 
         querySnapshot.forEach((docSnapshot) => {
             const data = docSnapshot.data();
 
-            if (data.promotion) {
-                const promotionItem = document.createElement('div');
-                promotionItem.className = 'promotion-item';
-                promotionItem.innerHTML = `
-                    <p><b>${data.name}</b></p>
-                    <p>Discount Price: <b>₱${data.promotion.discount_price}</b></p>
-                    <p>Original Price: <s>₱${data.price}</s></p>
-                    <p><small>Expires in: ${getTimeRemaining(data.promotion.expiration_time)}</small></p>
-                `;
-                promotionsList.appendChild(promotionItem);
-            }
+            const promotionItem = document.createElement('div');
+            promotionItem.className = 'promotion-item';
+            promotionItem.innerHTML = `
+                <p><b>${data.item_id}</b></p>
+                <p>Discount Price: <b>₱${data.discount_price}</b></p>
+                <p><small>Expires in: ${getTimeRemaining(data.expiration_time)}</small></p>
+                <button class="edit-promotion-btn" data-id="${docSnapshot.id}">Edit</button>
+                <button class="remove-promotion-btn" data-id="${docSnapshot.id}">Remove</button>
+            `;
+            promotionsList.appendChild(promotionItem);
+        });
+
+        // Attach event listeners
+        document.querySelectorAll('.edit-promotion-btn').forEach(button => {
+            button.addEventListener('click', openEditModal);
+        });
+        document.querySelectorAll('.remove-promotion-btn').forEach(button => {
+            button.addEventListener('click', removePromotion);
         });
     } catch (error) {
         console.error("Error loading promotions:", error);
@@ -69,40 +76,63 @@ async function loadPromotions() {
     }
 }
 
-/**
- * Load orders (dummy implementation for now).
- */
-async function loadOrders() {
-    const ordersList = document.getElementById('orders-list');
 
-    if (!ordersList) {
-        console.warn("Element with ID 'orders-list' not found.");
-        return;
-    }
+async function removePromotion(event) {
+    const promotionId = event.target.dataset.id;
 
-    // Replace this with real order-loading logic when available
     try {
-        // Simulate fetching orders (replace with actual Firestore logic)
-        ordersList.innerHTML = `
-            <div class="order-item">
-                <p><b>Order #12345</b></p>
-                <p>Customer: John Doe</p>
-                <p>Total: ₱1200</p>
-            </div>
-            <div class="order-item">
-                <p><b>Order #12346</b></p>
-                <p>Customer: Jane Smith</p>
-                <p>Total: ₱950</p>
-            </div>
-        `;
+        const promotionDocRef = doc(db, "promotions", promotionId);
+        await deleteDoc(promotionDocRef); // Remove from promotions collection
+        alert("Promotion removed successfully!");
+        loadPromotions(); // Reload promotions
     } catch (error) {
-        console.error("Error loading orders:", error);
-        ordersList.innerHTML = '<p>Failed to load orders. Please try again later.</p>';
+        console.error("Error removing promotion:", error);
+        alert("Failed to remove promotion. Please try again.");
     }
 }
 
-// Initialize the dashboard
-document.addEventListener('DOMContentLoaded', () => {
-    loadPromotions();
-    loadOrders();
-});
+function openEditModal(event) {
+    const promotionId = event.target.dataset.id;
+    const modal = document.getElementById('promotion-modal');
+    modal.dataset.promotionId = promotionId; // Save promotion ID for later
+    modal.style.display = "block";
+}
+
+async function saveEditPromotion() {
+    const modal = document.getElementById('promotion-modal');
+    const promotionId = modal.dataset.promotionId;
+    const discount = document.getElementById('edit-discount-price').value;
+    const duration = document.getElementById('edit-duration').value;
+
+    if (!discount && !duration) {
+        alert("Please provide at least one field to update!");
+        return;
+    }
+
+    try {
+        const promotionDocRef = doc(db, "promotions", promotionId);
+        const updateData = {};
+
+        if (discount) updateData.discount_price = parseFloat(discount);
+        if (duration) {
+            const additionalTime = duration * 60 * 60 * 1000; // Convert to milliseconds
+            const docSnap = await getDoc(promotionDocRef);
+            updateData.expiration_time = docSnap.data().expiration_time + additionalTime;
+        }
+
+        await updateDoc(promotionDocRef, updateData);
+        alert("Promotion updated successfully!");
+        closeEditModal();
+        loadPromotions();
+    } catch (error) {
+        console.error("Error updating promotion:", error);
+        alert("Failed to update promotion. Please try again.");
+    }
+}
+
+function closeEditModal() {
+    const modal = document.getElementById('promotion-modal');
+    modal.style.display = "none";
+}
+
+

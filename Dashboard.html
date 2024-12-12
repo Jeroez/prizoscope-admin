@@ -46,6 +46,20 @@
             </div>
         </div>
     </div>
+    <div id="promotion-modal" class="popup">
+        <div class="popup-content">
+            <h2>Edit Promotion</h2>
+            <label for="edit-discount-price">Discount Price:</label>
+            <input type="number" id="edit-discount-price" placeholder="Enter new discounted price">
+            <label for="edit-duration">Extend Duration (hours):</label>
+            <input type="number" id="edit-duration" placeholder="Enter additional hours">
+            <div class="popup-buttons">
+                <button id="save-edit-promotion-btn">Save Changes</button>
+                <button onclick="closeEditModal()">Cancel</button>
+            </div>
+        </div>
+    </div>
+    
     <script type="module" src="./Javascript/Dashboard.js"></script>
 </body>
 </html>
