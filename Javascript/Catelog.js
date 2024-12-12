@@ -27,7 +27,6 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // Load items from the database and render them
-// Load items from the database and render them
 async function loadItems() {
     const itemGrid = document.getElementById('item-grid');
     if (!itemGrid) {
@@ -52,7 +51,7 @@ async function loadItems() {
             const data = docSnapshot.data();
 
             // Check for expired promotions
-            if (data.promotion && data.promotion.expiration_time < now) {
+            if (data.promotion && parseInt(data.promotion.expiration_time) < now) {
                 const itemDocRef = doc(db, "items", itemName);
                 await updateDoc(itemDocRef, { promotion: deleteField() });
                 return;
@@ -67,7 +66,7 @@ async function loadItems() {
                 : `<p class="item-price">₱${data.price}</p>`;
 
             const remainingTime = data.promotion
-                ? `<p class="promotion-time">${getTimeRemaining(data.promotion.expiration_time)}</p>`
+                ? `<p class="promotion-time">${getTimeRemaining(parseInt(data.promotion.expiration_time))}</p>`
                 : "";
 
             itemCard.innerHTML = `
@@ -88,7 +87,6 @@ async function loadItems() {
     }
 }
 
-
 function getTimeRemaining(expirationTime) {
     const now = Date.now();
     const diff = expirationTime - now;
@@ -101,7 +99,6 @@ function getTimeRemaining(expirationTime) {
     const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
     return `${hours}h ${minutes}m remaining`;
 }
-
 
 // Search functionality for items
 function searchItems() {
@@ -170,13 +167,13 @@ async function savePromotion() {
         return;
     }
 
-    const expirationTime = Date.now() + duration * 60 * 60 * 1000; // Convert duration to milliseconds
+    const expirationTime = (Date.now() + parseInt(duration) * 60 * 60 * 1000).toString(); // Convert duration to milliseconds and store as string
 
     try {
         const itemDocRef = doc(db, "items", itemId);
         const promotionData = {
-            discount_price: parseFloat(discount),
-            expiration_time: expirationTime,
+            discount_price: discount.toString(), // Store as string
+            expiration_time: expirationTime, // Store as string
         };
 
         // Save to item
@@ -262,10 +259,10 @@ async function saveItem() {
 
     const imgURL = imageInput.value.trim();
     const name = nameInput.value.trim();
-    const price = parseFloat(priceInput.value);
+    const price = priceInput.value.trim(); // Keep as string
 
-    if (!imgURL || !name || isNaN(price)) {
-        alert("All fields are required, and price must be a valid number!");
+    if (!imgURL || !name || !price) {
+        alert("All fields are required!");
         return;
     }
 
@@ -293,6 +290,8 @@ async function saveItem() {
         alert("Failed to save item. Please try again.");
     }
 }
+
+
 
 
 
