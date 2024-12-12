@@ -129,3 +129,29 @@ nav a.active {
         grid-template-columns: repeat(2, 1fr);
     }
 }
+
+/* Styles for the promotions and orders */
+#promotions-list, #orders-list {
+    margin-top: 20px;
+}
+
+.promotion-item, .order-item {
+    border: 1px solid #ccc;
+    padding: 15px;
+    margin-bottom: 10px;
+    border-radius: 5px;
+    background-color: #f9f9f9;
+}
+
+.promotion-item b, .order-item b {
+    font-size: 18px;
+}
+
+.promotion-item p, .order-item p {
+    margin: 5px 0;
+}
+
+small {
+    color: #666;
+    font-size: 12px;
+}
