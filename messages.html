@@ -10,36 +10,26 @@
     <header>
         <h1>Prizoscope Admin</h1>
         <nav>
+            <a href="messages.html" class="active">Customer</a>
             <a href="Dashboard.html">Dashboard</a>
-            <a href="messages.html" class="active">Messages</a>
-            <a href="Customer.html">Customer</a>
             <a href="Catelog.html">Catalog</a>
         </nav>
     </header>
     <div class="content">
         <div class="search-container">
-            <input type="text" id="search-bar" placeholder="Search messages..." class="search-bar" oninput="searchMessages()">
+            <input type="text" id="search-bar" placeholder="Search users..." class="search-bar" oninput="searchUsers()">
         </div>
-        <div class="grid-container" id="messages-grid">
-            <!-- Sample Message -->
-            <div class="message-item">
-                <div class="message-header">
-                    <h3 class="sender-name">John Doe</h3>
-                    <span class="message-time">2 hours ago</span>
-                </div>
-                <p class="message-preview">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Proin euismod...</p>
-                <button class="delete-btn" onclick="showDeletePopup()">Delete</button>
+        <div id="user-list">
+            <!-- User cards will be dynamically populated here -->
+        </div>
+        <div id="chat-container" class="hidden">
+            <h2 id="chat-header"></h2>
+            <div id="chat-messages">
+                <!-- Messages will be dynamically populated here -->
             </div>
-        </div>
-    </div>
-
-    <!-- Popup for Deleting Message -->
-    <div id="delete-popup" class="popup">
-        <div class="popup-content">
-            <h2>Are you sure you want to delete this message?</h2>
-            <div class="popup-buttons">
-                <button id="confirm-delete-btn" class="confirm-btn" onclick="confirmDeleteMessage()">Delete</button>
-                <button class="cancel-btn" onclick="closeDeletePopup()">Cancel</button>
+            <div class="message-input-container">
+                <textarea id="admin-message" placeholder="Type your message here..."></textarea>
+                <button id="send-button" onclick="sendAdminMessage()">Send</button>
             </div>
         </div>
     </div>

@@ -1,82 +1,103 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.17.1/firebase-app.js";
-import { getDatabase, ref, onValue, remove } from "https://www.gstatic.com/firebasejs/9.17.1/firebase-database.js";
+import { getFirestore, doc, collection, getDocs, getDoc, updateDoc, setDoc } from "https://www.gstatic.com/firebasejs/9.17.1/firebase-firestore.js";
 
 const firebaseConfig = {
-    apiKey: "YOUR_API_KEY",
-    authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
-    databaseURL: "https://YOUR_PROJECT_ID.firebaseio.com",
-    projectId: "YOUR_PROJECT_ID",
-    storageBucket: "YOUR_PROJECT_ID.appspot.com",
-    messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
-    appId: "YOUR_APP_ID"
+    apiKey: "AIzaSyBZjABn7nj9ICjtx8iTf-VMX1PitOQjeiI",
+    authDomain: "prizoscope.firebaseapp.com",
+    projectId: "prizoscope",
+    storageBucket: "prizoscope.appspot.com",
+    messagingSenderId: "495746607948",
+    appId: "1:495746607948:web:42b97c39ffed87f88ebde9",
+    measurementId: "G-L6DGB8KCB9"
 };
 
 const app = initializeApp(firebaseConfig);
-const db = getDatabase(app);
+const db = getFirestore(app);
 
-document.addEventListener('DOMContentLoaded', loadMessages);
+document.addEventListener('DOMContentLoaded', loadUsers);
 
-function loadMessages() {
-    const messagesGrid = document.getElementById('messages-grid');
-    const messagesRef = ref(db, 'messages');
+const userList = document.getElementById('user-list');
+const chatContainer = document.getElementById('chat-container');
+const chatMessages = document.getElementById('chat-messages');
+const chatHeader = document.getElementById('chat-header');
+const adminMessageInput = document.getElementById('admin-message');
 
-    onValue(messagesRef, (snapshot) => {
-        messagesGrid.innerHTML = '';
-        const messages = snapshot.val();
+let selectedUser = null;
 
-        if (messages) {
-            Object.keys(messages).forEach(key => {
-                const message = messages[key];
+// Load all users with messages
+async function loadUsers() {
+    const chatsCollection = collection(db, "chats");
+    const chatDocs = await getDocs(chatsCollection);
 
-                const card = document.createElement('div');
-                card.className = 'card';
-                card.innerHTML = `
-                    <h3>${message.username}</h3>
-                    <p>${message.content}</p>
-                    <button onclick="showDeletePopup('${key}')">Delete</button>
-                `;
+    userList.innerHTML = '';
+    chatDocs.forEach(doc => {
+        const userCard = document.createElement('div');
+        userCard.className = 'user-card';
+        userCard.textContent = doc.id; // User's name (document ID)
+        userCard.onclick = () => loadMessages(doc.id);
 
-                messagesGrid.appendChild(card);
-            });
-        } else {
-            messagesGrid.innerHTML = '<p class="text-gray-500">No messages found.</p>';
-        }
+        userList.appendChild(userCard);
     });
 }
 
-let messageToDelete = null;
+// Load messages for a specific user
+async function loadMessages(userName) {
+    selectedUser = userName;
+    chatHeader.textContent = `Chat with ${userName}`;
+    chatMessages.innerHTML = '';
+    chatContainer.classList.remove('hidden');
 
-window.showDeletePopup = (messageId) => {
-    messageToDelete = messageId;
-    document.getElementById('delete-popup').style.display = 'flex';
-};
+    const userDoc = doc(db, "chats", userName);
+    const userChat = await getDoc(userDoc);
 
-window.closeDeletePopup = () => {
-    document.getElementById('delete-popup').style.display = 'none';
-    messageToDelete = null;
-};
+    if (userChat.exists()) {
+        const messages = Object.entries(userChat.data());
+        messages.sort(([keyA], [keyB]) => extractMessageIndex(keyA) - extractMessageIndex(keyB));
 
-window.confirmDeleteMessage = () => {
-    if (messageToDelete) {
-        const messageRef = ref(db, `messages/${messageToDelete}`);
-        remove(messageRef)
-            .then(() => {
-                alert("Message deleted successfully!");
-                closeDeletePopup();
-            })
-            .catch((error) => {
-                console.error("Error deleting message:", error);
-                alert("Failed to delete the message. Please try again.");
-            });
+        messages.forEach(([key, value]) => {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = key.startsWith('user_message') ? 'user-message' : 'admin-message';
+            messageDiv.textContent = value;
+
+            chatMessages.appendChild(messageDiv);
+        });
+
+        chatMessages.scrollTop = chatMessages.scrollHeight; // Scroll to the bottom
+    } else {
+        chatMessages.innerHTML = '<p>No messages found for this user.</p>';
     }
-};
+}
 
-window.searchMessages = () => {
+// Extract message index for sorting
+function extractMessageIndex(messageKey) {
+    return parseInt(messageKey.split('_').pop(), 10);
+}
+
+// Send admin message
+async function sendAdminMessage() {
+    const adminMessage = adminMessageInput.value.trim();
+    if (!adminMessage || !selectedUser) return;
+
+    const userDoc = doc(db, "chats", selectedUser);
+    const userChat = await getDoc(userDoc);
+
+    const messageCount = Object.keys(userChat.data() || {}).length || 0;
+    const newMessageKey = `admin_message_${messageCount + 1}`;
+
+    await updateDoc(userDoc, { [newMessageKey]: adminMessage });
+    adminMessageInput.value = '';
+    loadMessages(selectedUser);
+}
+
+// Search for users
+function searchUsers() {
     const query = document.getElementById('search-bar').value.toLowerCase();
-    const cards = document.querySelectorAll('.card');
+    const userCards = document.querySelectorAll('.user-card');
 
-    cards.forEach(card => {
-        const username = card.querySelector('h3').textContent.toLowerCase();
-        card.style.display = username.includes(query) ? 'block' : 'none';
+    userCards.forEach(card => {
+        card.style.display = card.textContent.toLowerCase().includes(query) ? 'block' : 'none';
     });
-};
+}
+
+window.sendAdminMessage = sendAdminMessage;
+
