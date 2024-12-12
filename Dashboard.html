@@ -10,27 +10,43 @@
     <header>
         <h1>Prizoscope Admin</h1>
         <nav>
-            <a href="Dashboard.html">Dashboard</a>
-            <a href="messages.html" class="active">Messages</a>
+            <a href="Dashboard.html" class="active">Dashboard</a>
+            <a href="messages.html">Messages</a>
             <a href="Customer.html">Customer</a>
             <a href="Catelog.html">Catalog</a>
         </nav>
     </header>
     <div class="content">
         <div class="dashboard-section">
-            <h2>Current Promotions</h2>
-            <div id="promotions-list">
-                <!-- Promotion items will appear here -->
+            <h2>Promotions Dashboard</h2>
+            <div class="promotion-card">
+                <div class="promotion-details">
+                    <h3>Summer Sale</h3>
+                    <p>20% off on all summer items</p>
+                    <p><strong>Current Price:</strong> $79.99</p>
+                    <p><strong>End Date:</strong> 2024-12-31</p>
+                </div>
+                <div class="promotion-actions">
+                    <button class="end-btn">End Promotion</button>
+                    <button>Extend Promotion</button>
+                    <button>Change Price</button>
+                </div>
             </div>
-        </div>
-        <div class="dashboard-section">
-            <h2>Current Orders</h2>
-            <div id="orders-list">
-                <!-- Order items will appear here -->
+            <div class="promotion-card">
+                <div class="promotion-details">
+                    <h3>Holiday Special</h3>
+                    <p>Buy one get one free</p>
+                    <p><strong>Current Price:</strong> $99.99</p>
+                    <p><strong>End Date:</strong> 2024-12-25</p>
+                </div>
+                <div class="promotion-actions">
+                    <button class="end-btn">End Promotion</button>
+                    <button>Extend Promotion</button>
+                    <button>Change Price</button>
+                </div>
             </div>
         </div>
     </div>
-    <!-- Link to the new JavaScript file -->
     <script type="module" src="./Javascript/Dashboard.js"></script>
 </body>
 </html>

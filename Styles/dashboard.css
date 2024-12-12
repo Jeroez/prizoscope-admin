@@ -1,50 +1,131 @@
-/* General Styles */
-body {
-    font-family: Arial, sans-serif;
+/* General Reset */
+* {
     margin: 0;
-    padding: 10px;
-    background-color: #d1d1d4;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #101828;
+    color: #ffffff;
+    line-height: 1.6;
+    margin: 0;
 }
 
 header {
-    background-color: #007bff;
-    color: white;
-    padding: 1rem 2rem;
-    text-align: center;
+    background-color: #1d2c4d;
+    color: #ffffff;
+    padding: 20px 10%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 3px solid #2a3c5b;
+}
+
+header h1 {
+    font-size: 1.8rem;
+    font-weight: bold;
 }
 
 nav {
     display: flex;
-    justify-content: center;
-    margin-top: 1rem;
+    gap: 15px;
 }
 
 nav a {
+    color: #ffffff;
     text-decoration: none;
-    color: white;
-    margin: 0 1rem;
-    padding: 0.5rem 1rem;
-    background-color: #343a40;
-    border-radius: 5px;
+    padding: 8px 14px;
+    border-radius: 4px;
+    transition: background-color 0.3s, color 0.3s;
 }
 
 nav a:hover {
-    background-color: #495057;
+    background-color: #334566;
 }
 
+nav a.active {
+    background-color: #2b80ff;
+    font-weight: bold;
+}
 
-/* Dashboard Page Specific Styles */
 .content {
-    margin: 0 50px;
+    padding: 20px 10%;
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 20px;
 }
 
 .dashboard-section {
-    margin-bottom: 20px;
+    background-color: #1d2c4d;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
 }
 
-#promotions-list,
-#orders-list {
+.dashboard-section h2 {
+    font-size: 1.6rem;
+    margin-bottom: 20px;
+    color: #2b80ff;
+    border-bottom: 2px solid #2a3c5b;
+    padding-bottom: 10px;
+}
+
+.promotion-card {
+    background-color: #253655;
+    margin-bottom: 15px;
+    padding: 20px;
+    border-radius: 8px;
     display: flex;
-    flex-wrap: wrap;
-    gap: 20px;
+    justify-content: space-between;
+    align-items: center;
+    transition: transform 0.3s, box-shadow 0.3s;
+}
+
+.promotion-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 6px 15px rgba(0, 0, 0, 0.5);
+}
+
+.promotion-details h3 {
+    font-size: 1.4rem;
+    margin-bottom: 10px;
+    color: #ffffff;
+}
+
+.promotion-details p {
+    font-size: 1rem;
+    color: #b0c4de;
+    margin-bottom: 5px;
+}
+
+.promotion-actions button {
+    background-color: #2b80ff;
+    color: #ffffff;
+    padding: 10px 15px;
+    margin-left: 10px;
+    border: none;
+    border-radius: 4px;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.promotion-actions button.end-btn {
+    background-color: #ff4d4d;
+}
+
+.promotion-actions button:hover {
+    background-color: #1e6ae8;
+}
+
+.promotion-actions button.end-btn:hover {
+    background-color: #e63939;
+}
+
+@media (min-width: 768px) {
+    .content {
+        grid-template-columns: repeat(2, 1fr);
+    }
 }

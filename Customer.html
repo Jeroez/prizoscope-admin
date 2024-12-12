@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Customer</title>
+    <title>Customer Service</title>
     <link rel="stylesheet" href="./Styles/customer.css">
 </head>
 <body>
@@ -11,30 +11,42 @@
         <h1>Prizoscope Admin</h1>
         <nav>
             <a href="Dashboard.html">Dashboard</a>
-            <a href="messages.html" class="active">Messages</a>
-            <a href="Customer.html">Customer</a>
+            <a href="messages.html">Messages</a>
+            <a href="Customer.html" class="active">Customer</a>
             <a href="Catelog.html">Catalog</a>
         </nav>
     </header>
     <div class="content">
         <h2>Customer Service</h2>
+        <p class="subtitle">Manage and assist your customers efficiently.</p>
+
         <div id="customer-list" class="grid-container">
-            <!-- Chat cards will be dynamically added here -->
+            <!-- Sample Customer Card -->
+            <div class="customer-card">
+                <div class="customer-info">
+                    <h3>Jane Doe</h3>
+                    <p>Last active: 5 minutes ago</p>
+                </div>
+                <button class="chat-btn" onclick="openChat('Jane Doe')">Open Chat</button>
+            </div>
+            <!-- Add more customer cards dynamically -->
         </div>
     </div>
 
     <!-- Popup Chat Window -->
     <div id="chat-popup" class="popup" style="display: none;">
         <div class="popup-content">
-            <h2 id="customer-name">Chat with Customer</h2>
+            <div class="chat-header">
+                <h2 id="customer-name">Chat with Jane Doe</h2>
+                <button class="close-popup" onclick="closeChat()">&times;</button>
+            </div>
             <div id="chat-messages" class="chat-window">
-                <!-- Messages will appear here -->
+                <!-- Chat messages will appear here dynamically -->
             </div>
             <div class="chat-input">
-                <input type="text" id="chat-message-input" placeholder="Type a message">
-                <button onclick="sendMessage()">Send</button>
+                <input type="text" id="chat-message-input" placeholder="Type a message...">
+                <button class="send-btn" onclick="sendMessage()">Send</button>
             </div>
-            <button class="close-popup" onclick="closeChat()">Close Chat</button>
         </div>
     </div>
 
