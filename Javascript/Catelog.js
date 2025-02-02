@@ -25,8 +25,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     loadItems();
 });
-
-// Load items from the database and render them
 async function loadItems() {
     const itemGrid = document.getElementById('item-grid');
     if (!itemGrid) {
@@ -34,9 +32,7 @@ async function loadItems() {
         return;
     }
 
-    const now = Date.now(); // Define 'now' for promotion expiration checks
-
-    // Reset the item grid
+    const now = Date.now(); 
     itemGrid.innerHTML = `
         <div class="card add-card" onclick="showAddPopup()">
             <div class="add-icon">+</div>
@@ -48,8 +44,6 @@ async function loadItems() {
 
         querySnapshot.forEach(async (docSnapshot) => {
             const data = docSnapshot.data();
-
-            // Check if promotion exists and calculate remaining time
             const promotion = data.promotion;
             const remainingTime = promotion
                 ? `<p class="promotion-time">${getTimeRemaining(promotion.expiration_time)}</p>`
@@ -60,8 +54,6 @@ async function loadItems() {
                 await updateDoc(itemDocRef, { promotion: deleteField() });
                 return;
             }
-
-            // Create the item card
             const itemCard = document.createElement('div');
             itemCard.className = 'card item-card';
 
@@ -100,9 +92,6 @@ function getTimeRemaining(expirationTime) {
     const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
     return `${hours}h ${minutes}m remaining`;
 }
-
-
-// Search functionality for items
 function searchItems() {
     const searchQuery = document.getElementById('search-bar').value.toLowerCase();
     const itemCards = document.querySelectorAll('.item-card');
@@ -113,13 +102,12 @@ function searchItems() {
     });
 }
 
-// Delete an item by ID
 async function deleteItem(id) {
     if (confirm("Are you sure you want to delete this item?")) {
         try {
             await deleteDoc(doc(db, "items", id));
             alert("Item deleted successfully!");
-            loadItems(); // Refresh the item list
+            loadItems();
         } catch (error) {
             console.error("Error deleting item: ", error);
             alert("Failed to delete the item. Please try again.");
@@ -127,7 +115,6 @@ async function deleteItem(id) {
     }
 }
 
-// Show the Add Item Popup
 function showAddPopup() {
     const popup = document.getElementById('add-popup');
     document.getElementById('popup-title').textContent = "Add New Item";
@@ -137,27 +124,23 @@ function showAddPopup() {
     popup.style.display = "flex";
 }
 
-// Close the Add Item Popup
 function closePopup() {
     const popup = document.getElementById('add-popup');
     popup.style.display = "none";
 }
 
-// Show the Promotion Popup
 function showPromotionPopup(itemId) {
     const popup = document.getElementById('promotion-popup');
-    popup.setAttribute('data-item-id', itemId); // Attach item ID to popup for context
+    popup.setAttribute('data-item-id', itemId);
     popup.style.display = "flex";
 }
 
-// Close the Promotion Popup
 function closePromotionPopup() {
     const popup = document.getElementById('promotion-popup');
     popup.style.display = "none";
-    popup.removeAttribute('data-item-id'); // Clean up after closing
+    popup.removeAttribute('data-item-id');
 }
 
-// Save Promotion Details
 async function savePromotion() {
     const popup = document.getElementById('promotion-popup');
     const itemId = popup.getAttribute('data-item-id');
@@ -169,8 +152,7 @@ async function savePromotion() {
         return;
     }
 
-    const expirationTime = Date.now() + duration * 60 * 60 * 1000; // Convert duration to milliseconds
-
+    const expirationTime = Date.now() + duration * 60 * 60 * 1000;
     try {
         const itemDocRef = doc(db, "items", itemId);
         await updateDoc(itemDocRef, {
@@ -188,10 +170,9 @@ async function savePromotion() {
     }
 }
 
-let itemToDeleteId = null; // Track the item to delete
-
+let itemToDeleteId = null; 
 function showDeletePopup(itemId) {
-    itemToDeleteId = itemId; // Store the item ID for deletion
+    itemToDeleteId = itemId;
     const deletePopup = document.getElementById('delete-popup');
     deletePopup.style.display = "flex";
 }
@@ -199,7 +180,7 @@ function showDeletePopup(itemId) {
 function closeDeletePopup() {
     const deletePopup = document.getElementById('delete-popup');
     deletePopup.style.display = "none";
-    itemToDeleteId = null; // Reset the tracked item ID
+    itemToDeleteId = null;
 }
 
 async function confirmDeleteItem() {
@@ -208,7 +189,7 @@ async function confirmDeleteItem() {
             await deleteDoc(doc(db, "items", itemToDeleteId));
             alert("Item deleted successfully!");
             closeDeletePopup();
-            loadItems(); // Refresh the item list
+            loadItems();
         } catch (error) {
             console.error("Error deleting item: ", error);
             alert("Failed to delete the item. Please try again.");
@@ -218,26 +199,18 @@ async function confirmDeleteItem() {
 
 async function editItem(itemId) {
     try {
-        // Reference to the Firestore document for the item
         const itemDocRef = doc(db, "items", itemId);
-
-        // Fetch the document snapshot
         const docSnap = await getDoc(itemDocRef);
 
         if (docSnap.exists()) {
             const data = docSnap.data();
-
-            // Populate the popup fields with current item data
             document.getElementById('popup-title').textContent = "Edit Item";
             document.getElementById('item-image').value = data.img_url || "";
             document.getElementById('item-name').value = data.name || "";
             document.getElementById('item-price').value = data.price || "";
-
-            // Attach the item ID to the popup to distinguish between adding and editing
             const popup = document.getElementById('add-popup');
             popup.setAttribute('data-edit-item-id', itemId);
 
-            // Show the popup
             popup.style.display = "flex";
         } else {
             alert("Item not found!");
@@ -250,12 +223,10 @@ async function editItem(itemId) {
 
 
 async function saveItem() {
-    // Get popup elements
     const imageInput = document.getElementById('item-image');
     const nameInput = document.getElementById('item-name');
     const priceInput = document.getElementById('item-price');
 
-    // Validate inputs
     const imgURL = imageInput.value.trim();
     const name = nameInput.value.trim();
     const price = parseFloat(priceInput.value);
@@ -266,23 +237,18 @@ async function saveItem() {
     }
 
     try {
-        // Check if editing or adding a new item
         const popup = document.getElementById('add-popup');
         const editItemId = popup.getAttribute('data-edit-item-id');
 
         if (editItemId) {
-            // Update existing item
             const itemDocRef = doc(db, "items", editItemId);
             await updateDoc(itemDocRef, { img_url: imgURL, name: name, price: price });
             alert("Item updated successfully!");
-            popup.removeAttribute('data-edit-item-id'); // Clear edit context
+            popup.removeAttribute('data-edit-item-id');
         } else {
-            // Add new item
             await addDoc(itemsCollection, { img_url: imgURL, name: name, price: price });
             alert("Item added successfully!");
         }
-
-        // Close popup and refresh items
         closePopup();
         loadItems();
     } catch (error) {
@@ -290,14 +256,6 @@ async function saveItem() {
         alert("Failed to save item. Please try again.");
     }
 }
-
-
-
-
-
-
-
-// Attach to globallly
 window.showAddPopup = showAddPopup;
 window.closePopup = closePopup;
 window.showPromotionPopup = showPromotionPopup;
@@ -311,5 +269,4 @@ window.searchItems = searchItems;
 window.savePromotion = savePromotion;
 window.saveItem = saveItem;
 
-// Automatically load items on page load
 window.onload = loadItems;

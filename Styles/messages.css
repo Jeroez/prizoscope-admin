@@ -1,7 +1,7 @@
 /* Updated CSS to fix white background issue */
 .promotion-card {
-    background-color: #253655; /* Match the dashboard-section theme */
-    color: #ffffff; /* Ensure text is white for visibility */
+    background-color: #253655; 
+    color: #ffffff; 
     margin-bottom: 15px;
     padding: 20px;
     border-radius: 8px;
@@ -18,11 +18,9 @@
 
 .promotion-details p {
     font-size: 1rem;
-    color: #b0c4de; /* Matches dashboard-section color */
+    color: #b0c4de; 
     margin-bottom: 5px;
 }
-
-/* Hide modal section by default */
 #promotion-modal {
-    display: none; /* Set to invisible unless explicitly triggered */
+    display: none; 
 }

@@ -1,4 +1,3 @@
-/* General Reset */
 * {
     margin: 0;
     padding: 0;
@@ -130,7 +129,6 @@ nav a.active {
     }
 }
 
-/* Styles for the promotions and orders */
 #promotions-list, #orders-list {
     margin-top: 20px;
 }
@@ -184,7 +182,6 @@ small {
     margin-bottom: 10px;
 }
 
-/* Popup modal styling */
 .popup {
     display: none;
     position: fixed;
@@ -223,7 +220,6 @@ small {
     z-index: 999;
 }
 
-/* Show the modal and overlay when active */
 .popup.show {
     display: block;
 }

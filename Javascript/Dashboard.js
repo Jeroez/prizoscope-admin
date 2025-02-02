@@ -1,7 +1,6 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.17.1/firebase-app.js";
 import { getFirestore, collection, getDocs, doc, updateDoc, deleteField, getDoc } from "https://www.gstatic.com/firebasejs/9.17.1/firebase-firestore.js";
 
-// Firebase Configuration
 const firebaseConfig = {
     apiKey: "AIzaSyBZjABn7nj9ICjtx8iTf-VMX1PitOQjeiI",
     authDomain: "prizoscope.firebaseapp.com",
@@ -12,13 +11,10 @@ const firebaseConfig = {
     measurementId: "G-L6DGB8KCB9"
 };
 
-// Initialize Firebase
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-/**
- * Utility function to calculate duration from expiration_time.
- */
+
 function getDuration(expirationTime) {
     const now = Date.now();
     const remainingTime = expirationTime - now;
@@ -32,9 +28,6 @@ function getDuration(expirationTime) {
     return `${hours}h ${minutes}m remaining`;
 }
 
-/**
- * Load promotions from Firestore and separate them into current and past.
- */
 async function loadPromotions() {
     const currentPromotionsList = document.getElementById('current-promotions-list');
     const pastPromotionsList = document.getElementById('past-promotions-list');
@@ -47,14 +40,14 @@ async function loadPromotions() {
         const itemsCollection = collection(db, "items");
         const querySnapshot = await getDocs(itemsCollection);
 
-        console.log("Fetched promotions: ", querySnapshot.docs.length); // Debugging
+        console.log("Fetched promotions: ", querySnapshot.docs.length);
 
-        currentPromotionsList.innerHTML = ''; // Clear current promotions
-        pastPromotionsList.innerHTML = ''; // Clear past promotions
+        currentPromotionsList.innerHTML = '';
+        pastPromotionsList.innerHTML = '';
 
         querySnapshot.forEach((docSnapshot) => {
             const data = docSnapshot.data();
-            const itemName = docSnapshot.id; // Document ID as item name
+            const itemName = docSnapshot.id;
             const discountPrice = data.promotion?.discount_price ?? "N/A";
             const expirationTime = data.promotion?.expiration_time ?? Date.now();
             const duration = getDuration(expirationTime);
@@ -81,8 +74,6 @@ async function loadPromotions() {
                 currentPromotionsList.appendChild(promotionCard);
             }
         });
-
-        // Attach event listeners for buttons in both sections
         document.querySelectorAll('.end-btn').forEach(button => {
             button.addEventListener('click', endPromotion);
         });
@@ -100,9 +91,6 @@ async function loadPromotions() {
     }
 }
 
-/**
- * End a promotion by marking it as expired or moving it to past promotions.
- */
 async function endPromotion(event) {
     const promotionId = event.target.dataset.id;
 
@@ -110,16 +98,14 @@ async function endPromotion(event) {
         const promotionDocRef = doc(db, "items", promotionId);
         await updateDoc(promotionDocRef, { "promotion.expiration_time": Date.now() }); // Mark as expired
         alert("Promotion ended successfully!");
-        loadPromotions(); // Refresh promotions
+        loadPromotions();
     } catch (error) {
         console.error("Error ending promotion:", error);
         alert("Failed to end promotion. Please try again.");
     }
 }
 
-/**
- * Delete a promotion from Firestore.
- */
+
 async function deletePromotion(event) {
     const promotionId = event.target.dataset.id;
 
@@ -129,30 +115,25 @@ async function deletePromotion(event) {
 
     try {
         const promotionDocRef = doc(db, "items", promotionId);
-        await updateDoc(promotionDocRef, { promotion: deleteField() }); // Remove the promotion field
+        await updateDoc(promotionDocRef, { promotion: deleteField() });
         alert("Promotion deleted successfully!");
-        loadPromotions(); // Refresh promotions
+        loadPromotions();
     } catch (error) {
         console.error("Error deleting promotion:", error);
         alert("Failed to delete promotion. Please try again.");
     }
 }
 
-/**
- * Open the edit modal and populate data.
- */
 function openEditModal(event) {
     const promotionId = event.target.dataset.id;
     const modal = document.getElementById('promotion-modal');
     const overlay = document.querySelector('.popup-overlay');
-    modal.dataset.promotionId = promotionId; // Store promotion ID
+    modal.dataset.promotionId = promotionId; 
     modal.classList.add('show');
     overlay.classList.add('show');
 }
 
-/**
- * Close the edit modal.
- */
+
 function closeEditModal() {
     const modal = document.getElementById('promotion-modal');
     const overlay = document.querySelector('.popup-overlay');
@@ -160,9 +141,7 @@ function closeEditModal() {
     overlay.classList.remove('show');
 }
 
-/**
- * Save changes to the promotion in Firestore.
- */
+
 async function saveEditPromotion() {
     const modal = document.getElementById('promotion-modal');
     const promotionId = modal.dataset.promotionId;
@@ -180,7 +159,7 @@ async function saveEditPromotion() {
 
         if (discount) updateData["promotion.discount_price"] = parseFloat(discount);
         if (duration) {
-            const additionalTime = duration * 60 * 60 * 1000; // Convert hours to milliseconds
+            const additionalTime = duration * 60 * 60 * 1000;
             const docSnap = await getDoc(promotionDocRef);
             updateData["promotion.expiration_time"] = docSnap.data().promotion.expiration_time + additionalTime;
         }
@@ -195,8 +174,6 @@ async function saveEditPromotion() {
     }
 }
 
-// Load promotions on page load
 window.addEventListener('DOMContentLoaded', loadPromotions);
 
-// Attach the save button functionality
 document.getElementById('save-edit-promotion-btn').addEventListener('click', saveEditPromotion);
