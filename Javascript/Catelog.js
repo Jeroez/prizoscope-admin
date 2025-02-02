@@ -34,7 +34,7 @@ async function loadItems() {
         return;
     }
 
-    const now = Date.now(); // For promotion expiration checks
+    const now = Date.now(); // Define 'now' for promotion expiration checks
 
     // Reset the item grid
     itemGrid.innerHTML = `
@@ -47,36 +47,36 @@ async function loadItems() {
         const querySnapshot = await getDocs(itemsCollection);
 
         querySnapshot.forEach(async (docSnapshot) => {
-            const itemName = docSnapshot.id; // Use the document name as the item's name
             const data = docSnapshot.data();
 
-            // Check for expired promotions
-            if (data.promotion && parseInt(data.promotion.expiration_time) < now) {
-                const itemDocRef = doc(db, "items", itemName);
+            // Check if promotion exists and calculate remaining time
+            const promotion = data.promotion;
+            const remainingTime = promotion
+                ? `<p class="promotion-time">${getTimeRemaining(promotion.expiration_time)}</p>`
+                : "";
+
+            if (promotion && promotion.expiration_time < now) {
+                const itemDocRef = doc(db, "items", docSnapshot.id);
                 await updateDoc(itemDocRef, { promotion: deleteField() });
                 return;
             }
 
-            // Render the item card
+            // Create the item card
             const itemCard = document.createElement('div');
             itemCard.className = 'card item-card';
 
-            const priceHTML = data.promotion
-                ? `<p class="item-price"><s>₱${data.price}</s> <b>₱${data.promotion.discount_price}</b></p>`
+            const priceHTML = promotion
+                ? `<p class="item-price"><s>₱${data.price}</s> <b>₱${promotion.discount_price}</b></p>`
                 : `<p class="item-price">₱${data.price}</p>`;
 
-            const remainingTime = data.promotion
-                ? `<p class="promotion-time">${getTimeRemaining(parseInt(data.promotion.expiration_time))}</p>`
-                : "";
-
             itemCard.innerHTML = `
-                <img src="${data.img_url}" class="item-image" alt="${itemName}">
-                <h3 class="item-name">${itemName}</h3>
+                <img src="${data.img_url}" class="item-image" alt="${data.name}">
+                <h3 class="item-name">${data.name}</h3>
                 ${priceHTML}
                 ${remainingTime}
-                <button onclick="editItem('${itemName}')">Edit</button>
-                <button onclick="showDeletePopup('${itemName}')">Delete</button>
-                <button onclick="showPromotionPopup('${itemName}')">Set Promotion</button>
+                <button onclick="editItem('${docSnapshot.id}')">Edit</button>
+                <button onclick="showDeletePopup('${docSnapshot.id}')">Delete</button>
+                <button onclick="showPromotionPopup('${docSnapshot.id}')">Set Promotion</button>
             `;
 
             itemGrid.appendChild(itemCard);
@@ -86,6 +86,7 @@ async function loadItems() {
         alert("Failed to load items. Please try again.");
     }
 }
+
 
 function getTimeRemaining(expirationTime) {
     const now = Date.now();
@@ -99,6 +100,7 @@ function getTimeRemaining(expirationTime) {
     const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
     return `${hours}h ${minutes}m remaining`;
 }
+
 
 // Search functionality for items
 function searchItems() {
@@ -167,25 +169,16 @@ async function savePromotion() {
         return;
     }
 
-    const expirationTime = (Date.now() + parseInt(duration) * 60 * 60 * 1000).toString(); // Convert duration to milliseconds and store as string
+    const expirationTime = Date.now() + duration * 60 * 60 * 1000; // Convert duration to milliseconds
 
     try {
         const itemDocRef = doc(db, "items", itemId);
-        const promotionData = {
-            discount_price: discount.toString(), // Store as string
-            expiration_time: expirationTime, // Store as string
-        };
-
-        // Save to item
-        await updateDoc(itemDocRef, { promotion: promotionData });
-
-        // Save to promotions collection
-        const promotionsCollection = collection(db, "promotions");
-        await addDoc(promotionsCollection, {
-            item_id: itemId,
-            ...promotionData,
+        await updateDoc(itemDocRef, {
+            promotion: {
+                discount_price: parseFloat(discount),
+                expiration_time: expirationTime,
+            },
         });
-
         alert("Promotion set successfully!");
         closePromotionPopup();
         loadItems();
@@ -212,34 +205,39 @@ function closeDeletePopup() {
 async function confirmDeleteItem() {
     if (itemToDeleteId) {
         try {
-            const itemDocRef = doc(db, "items", itemToDeleteId); // Use item name as the document ID
-            await deleteDoc(itemDocRef);
+            await deleteDoc(doc(db, "items", itemToDeleteId));
             alert("Item deleted successfully!");
             closeDeletePopup();
             loadItems(); // Refresh the item list
         } catch (error) {
-            console.error("Error deleting item:", error);
+            console.error("Error deleting item: ", error);
             alert("Failed to delete the item. Please try again.");
         }
     }
 }
 
-
-async function editItem(itemName) {
+async function editItem(itemId) {
     try {
-        const itemDocRef = doc(db, "items", itemName); // Reference by item name
+        // Reference to the Firestore document for the item
+        const itemDocRef = doc(db, "items", itemId);
+
+        // Fetch the document snapshot
         const docSnap = await getDoc(itemDocRef);
 
         if (docSnap.exists()) {
             const data = docSnap.data();
 
+            // Populate the popup fields with current item data
             document.getElementById('popup-title').textContent = "Edit Item";
             document.getElementById('item-image').value = data.img_url || "";
             document.getElementById('item-name').value = data.name || "";
             document.getElementById('item-price').value = data.price || "";
 
+            // Attach the item ID to the popup to distinguish between adding and editing
             const popup = document.getElementById('add-popup');
-            popup.setAttribute('data-edit-item-id', itemName); // Attach item name for editing
+            popup.setAttribute('data-edit-item-id', itemId);
+
+            // Show the popup
             popup.style.display = "flex";
         } else {
             alert("Item not found!");
@@ -251,38 +249,40 @@ async function editItem(itemName) {
 }
 
 
-
 async function saveItem() {
+    // Get popup elements
     const imageInput = document.getElementById('item-image');
     const nameInput = document.getElementById('item-name');
     const priceInput = document.getElementById('item-price');
 
+    // Validate inputs
     const imgURL = imageInput.value.trim();
     const name = nameInput.value.trim();
-    const price = priceInput.value.trim(); // Keep as string
+    const price = parseFloat(priceInput.value);
 
-    if (!imgURL || !name || !price) {
-        alert("All fields are required!");
+    if (!imgURL || !name || isNaN(price)) {
+        alert("All fields are required and price must be a number!");
         return;
     }
 
     try {
+        // Check if editing or adding a new item
         const popup = document.getElementById('add-popup');
-        const editItemName = popup.getAttribute('data-edit-item-id');
+        const editItemId = popup.getAttribute('data-edit-item-id');
 
-        if (editItemName) {
+        if (editItemId) {
             // Update existing item
-            const itemDocRef = doc(db, "items", editItemName);
-            await updateDoc(itemDocRef, { img_url: imgURL, price, name });
+            const itemDocRef = doc(db, "items", editItemId);
+            await updateDoc(itemDocRef, { img_url: imgURL, name: name, price: price });
             alert("Item updated successfully!");
             popup.removeAttribute('data-edit-item-id'); // Clear edit context
         } else {
-            // Add a new item
-            const itemDocRef = doc(db, "items", name); // Use item name as the document ID
-            await setDoc(itemDocRef, { img_url: imgURL, price, name });
+            // Add new item
+            await addDoc(itemsCollection, { img_url: imgURL, name: name, price: price });
             alert("Item added successfully!");
         }
 
+        // Close popup and refresh items
         closePopup();
         loadItems();
     } catch (error) {
@@ -290,9 +290,6 @@ async function saveItem() {
         alert("Failed to save item. Please try again.");
     }
 }
-
-
-
 
 
 

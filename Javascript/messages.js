@@ -62,7 +62,18 @@ async function loadMessages(userName) {
             messages.forEach(([key, value]) => {
                 const messageDiv = document.createElement('div');
                 messageDiv.className = key.startsWith('user_message') ? 'message user-message' : 'message admin-message';
-                messageDiv.textContent = value;
+                
+                // Check if the message contains an image URL
+                if (isImageUrl(value)) {
+                    const imgElement = document.createElement('img');
+                    imgElement.src = value;
+                    imgElement.alt = "Image";
+                    imgElement.className = 'chat-image'; // Add styling class
+                    messageDiv.appendChild(imgElement);
+                } else {
+                    messageDiv.textContent = value;
+                }
+                
                 chatMessages.appendChild(messageDiv);
             });
 
@@ -74,6 +85,11 @@ async function loadMessages(userName) {
     } catch (error) {
         console.error("Error loading messages:", error);
     }
+}
+
+// Check if a string is an image URL
+function isImageUrl(url) {
+    return /\.(jpeg|jpg|gif|png|webp|svg)$/.test(url);
 }
 
 // Extract message index for sorting

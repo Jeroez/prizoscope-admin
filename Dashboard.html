@@ -17,32 +17,15 @@
     </header>
     <div class="content">
         <div class="dashboard-section">
-            <h2>Promotions Dashboard</h2>
-            <div class="promotion-card">
-                <div class="promotion-details">
-                    <h3>Summer Sale</h3>
-                    <p>20% off on all summer items</p>
-                    <p><strong>Current Price:</strong> $79.99</p>
-                    <p><strong>End Date:</strong> 2024-12-31</p>
-                </div>
-                <div class="promotion-actions">
-                    <button class="end-btn">End Promotion</button>
-                    <button>Extend Promotion</button>
-                    <button>Change Price</button>
-                </div>
+            <h2>Current Promotions</h2>
+            <div id="current-promotions-list">
+                <!-- Current promotions dynamically populate here -->
             </div>
-            <div class="promotion-card">
-                <div class="promotion-details">
-                    <h3>Holiday Special</h3>
-                    <p>Buy one get one free</p>
-                    <p><strong>Current Price:</strong> $99.99</p>
-                    <p><strong>End Date:</strong> 2024-12-25</p>
-                </div>
-                <div class="promotion-actions">
-                    <button class="end-btn">End Promotion</button>
-                    <button>Extend Promotion</button>
-                    <button>Change Price</button>
-                </div>
+        </div>
+        <div class="dashboard-section">
+            <h2>Past Promotions</h2>
+            <div id="past-promotions-list">
+                <!-- Past promotions dynamically populate here -->
             </div>
         </div>
     </div>
@@ -59,7 +42,7 @@
             </div>
         </div>
     </div>
-    
+
     <script type="module" src="./Javascript/Dashboard.js"></script>
 </body>
 </html>
