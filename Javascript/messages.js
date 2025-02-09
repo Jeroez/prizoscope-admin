@@ -23,18 +23,17 @@ const adminMessageInput = document.getElementById('admin-message');
 
 let selectedUser = null;
 
-// Load all users with messages
 async function loadUsers() {
     try {
         const chatsCollection = collection(db, "chats");
         const chatDocs = await getDocs(chatsCollection);
 
-        userList.innerHTML = ''; // Clear user list
+        userList.innerHTML = '';
         chatDocs.forEach(doc => {
             const userCard = document.createElement('div');
             userCard.className = 'user-card';
-            userCard.textContent = doc.id; // Display user name
-            userCard.addEventListener('click', () => loadMessages(doc.id)); // Attach click event
+            userCard.textContent = doc.id;
+            userCard.addEventListener('click', () => loadMessages(doc.id));
             userList.appendChild(userCard);
         });
     } catch (error) {
@@ -42,12 +41,11 @@ async function loadUsers() {
     }
 }
 
-// Load messages for a specific user
 async function loadMessages(userName) {
     try {
         selectedUser = userName;
         chatHeader.textContent = `Chat with ${userName}`;
-        chatMessages.innerHTML = ''; // Clear previous messages
+        chatMessages.innerHTML = ''; 
 
         const userDoc = doc(db, "chats", userName);
         const userChat = await getDoc(userDoc);
@@ -55,18 +53,25 @@ async function loadMessages(userName) {
         if (userChat.exists()) {
             const messages = Object.entries(userChat.data());
 
-            // Sort messages by their keys to maintain order
             messages.sort(([keyA], [keyB]) => extractMessageIndex(keyA) - extractMessageIndex(keyB));
 
-            // Render messages in the chat window
             messages.forEach(([key, value]) => {
                 const messageDiv = document.createElement('div');
                 messageDiv.className = key.startsWith('user_message') ? 'message user-message' : 'message admin-message';
-                messageDiv.textContent = value;
+                
+                if (isImageUrl(value)) {
+                    const imgElement = document.createElement('img');
+                    imgElement.src = value;
+                    imgElement.alt = "Image";
+                    imgElement.className = 'chat-image'; 
+                    messageDiv.appendChild(imgElement);
+                } else {
+                    messageDiv.textContent = value;
+                }
+                
                 chatMessages.appendChild(messageDiv);
             });
 
-            // Scroll to the latest message
             chatMessages.scrollTop = chatMessages.scrollHeight;
         } else {
             chatMessages.innerHTML = '<p>No messages found for this user.</p>';
@@ -76,12 +81,14 @@ async function loadMessages(userName) {
     }
 }
 
-// Extract message index for sorting
+function isImageUrl(url) {
+    return /\.(jpeg|jpg|gif|png|webp|svg)$/.test(url);
+}
+
 function extractMessageIndex(messageKey) {
     return parseInt(messageKey.split('_').pop(), 10);
 }
 
-// Send admin message
 async function sendAdminMessage() {
     try {
         const adminMessage = adminMessageInput.value.trim();
@@ -90,21 +97,18 @@ async function sendAdminMessage() {
         const userDoc = doc(db, "chats", selectedUser);
         const userChat = await getDoc(userDoc);
 
-        // Get the message count to determine the next message key
         const messageCount = Object.keys(userChat.data() || {}).length || 0;
         const newMessageKey = `admin_message_${messageCount + 1}`;
 
-        // Update Firebase with the new message
         await updateDoc(userDoc, { [newMessageKey]: adminMessage });
 
-        adminMessageInput.value = ''; // Clear input field
-        loadMessages(selectedUser); // Refresh the chat window
+        adminMessageInput.value = '';
+        loadMessages(selectedUser);
     } catch (error) {
         console.error("Error sending message:", error);
     }
 }
 
-// Search for users
 function searchUsers() {
     const query = document.getElementById('search-bar').value.toLowerCase();
     const userCards = document.querySelectorAll('.user-card');
