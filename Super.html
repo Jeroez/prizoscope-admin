@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Super Admin Management</title>
+    <link rel="stylesheet" href="./Styles/Super.css">
+</head>
+<body>
+    <header>
+        <h1>Prizoscope Admin Panel</h1>
+        <nav>
+            <a href="messages.html">Customer</a>
+            <a href="Dashboard.html">Dashboard</a>
+            <a href="Catelog.html">Catalog</a>
+            <a href="Super.html" class="active">Admin Management</a>
+        </nav>
+        <button class="logout-btn" onclick="logout()">Logout</button>
+    </header>
+    
+    <div class="container">
+        <section class="admin-management">
+            <h2>Manage Admins</h2>
+            <div id="admin-list" class="admin-list">
+                <!-- Dynamically loaded admin list -->
+            </div>
+        </section>
+
+        <section class="admin-form">
+            <h2>Add New Admin</h2>
+            <form id="add-admin-form">
+                <label for="new-admin-username">Username:</label>
+                <input type="text" id="new-admin-username" placeholder="Enter username" required>
+                
+                <label for="new-admin-password">Password:</label>
+                <input type="password" id="new-admin-password" placeholder="Enter password" required>
+                
+                <label for="new-admin-store">Store:</label>
+                <input type="text" id="new-admin-store" placeholder="Enter store name" required>
+                
+                <button type="submit" class="add-btn">Add Admin</button>
+            </form>
+        </section>
+    </div>
+    
+    <script type="module" src="./Javascript/Super.js"></script>
+</body>
+</html>

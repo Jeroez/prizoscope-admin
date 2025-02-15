@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Update Prices</title>
+    <script type="module">
+                // Firebase configuration
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.17.1/firebase-app.js";
+        import { getFirestore, collection, getDocs, updateDoc, doc } from "https://www.gstatic.com/firebasejs/9.17.1/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyBZjABn7nj9ICjtx8iTf-VMX1PitOQjeiI",
+            authDomain: "prizoscope.firebaseapp.com",
+            projectId: "prizoscope",
+            storageBucket: "prizoscope.firebasestorage.app",
+            messagingSenderId: "495746607948",
+            appId: "1:495746607948:web:42b97c39ffed87f88ebde9",
+            measurementId: "G-L6DGB8KCB9"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        async function updatePriceToNumber() {
+            const itemsRef = collection(db, "items");
+            const querySnapshot = await getDocs(itemsRef);
+            
+            const updatePromises = querySnapshot.docs.map(async (document) => {
+                const itemData = document.data();
+                if (typeof itemData.price === "string" && !isNaN(parseFloat(itemData.price))) {
+                    return updateDoc(doc(db, "items", document.id), {
+                        price: Number(itemData.price)
+                    });
+                }
+            });
+
+            await Promise.all(updatePromises);
+            alert("Prices updated to numbers!");
+        }
+
+        async function updatePriceToString() {
+            const itemsRef = collection(db, "items");
+            const querySnapshot = await getDocs(itemsRef);
+            
+            const updatePromises = querySnapshot.docs.map(async (document) => {
+                const itemData = document.data();
+                if (typeof itemData.price === "number") {
+                    return updateDoc(doc(db, "items", document.id), {
+                        price: itemData.price.toString()
+                    });
+                }
+            });
+
+            await Promise.all(updatePromises);
+            alert("Prices updated to strings!");
+        }
+
+        window.updatePriceToNumber = updatePriceToNumber;
+        window.updatePriceToString = updatePriceToString;
+
+    </script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin-top: 50px;
+        }
+        button {
+            padding: 10px 20px;
+            margin: 10px;
+            font-size: 16px;
+            border: none;
+            cursor: pointer;
+            border-radius: 5px;
+        }
+        .convert-number {
+            background-color: #4CAF50;
+            color: white;
+        }
+        .convert-string {
+            background-color: #f44336;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <h1>Convert Price Fields</h1>
+    <button class="convert-number" onclick="updatePriceToNumber()">Convert Prices to Numbers</button>
+    <button class="convert-string" onclick="updatePriceToString()">Convert Prices to Strings</button>
+</body>
+</html>

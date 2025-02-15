@@ -34,10 +34,21 @@ body {
     display: flex;
 }
 
-.nav-links {
-    list-style: none;
-    display: flex;
-    gap: 15px;
+nav a {
+    color: #ffffff;
+    text-decoration: none;
+    padding: 8px 14px;
+    border-radius: 4px;
+    transition: background-color 0.3s, color 0.3s;
+}
+
+nav a:hover {
+    background-color: #334566;
+}
+
+nav a.active {
+    background-color: #2b80ff;
+    font-weight: bold;
 }
 
 .header-nav-link {

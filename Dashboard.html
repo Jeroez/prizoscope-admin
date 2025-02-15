@@ -13,49 +13,45 @@
             <a href="messages.html">Customer</a>
             <a href="Dashboard.html" class="active">Dashboard</a>
             <a href="Catelog.html">Catalog</a>
+            <a href="Super.html">Admin Management</a>
         </nav>
     </header>
+    
     <div class="content">
-        <div class="dashboard-section">
-            <h2>Promotions Dashboard</h2>
-            <div class="promotion-card">
-                <div class="promotion-details">
-                    <h3>Summer Sale</h3>
-                    <p>20% off on all summer items</p>
-                    <p><strong>Current Price:</strong> $79.99</p>
-                    <p><strong>End Date:</strong> 2024-12-31</p>
-                </div>
-                <div class="promotion-actions">
-                    <button class="end-btn">End Promotion</button>
-                    <button>Extend Promotion</button>
-                    <button>Change Price</button>
-                </div>
+        <div class="dashboard-container">
+            <div class="dashboard-section">
+                <h2>Active Promotions</h2>
+                <div id="active-promotions" class="promotions-grid"></div>
             </div>
-            <div class="promotion-card">
-                <div class="promotion-details">
-                    <h3>Holiday Special</h3>
-                    <p>Buy one get one free</p>
-                    <p><strong>Current Price:</strong> $99.99</p>
-                    <p><strong>End Date:</strong> 2024-12-25</p>
-                </div>
-                <div class="promotion-actions">
-                    <button class="end-btn">End Promotion</button>
-                    <button>Extend Promotion</button>
-                    <button>Change Price</button>
-                </div>
+            
+            <div class="dashboard-section">
+                <h2>Past Promotions</h2>
+                <div id="past-promotions" class="promotions-grid"></div>
             </div>
         </div>
     </div>
-    <div id="promotion-modal" class="popup">
-        <div class="popup-content">
-            <h2>Edit Promotion</h2>
-            <label for="edit-discount-price">Discount Price:</label>
-            <input type="number" id="edit-discount-price" placeholder="Enter new discounted price">
-            <label for="edit-duration">Extend Duration (hours):</label>
-            <input type="number" id="edit-duration" placeholder="Enter additional hours">
-            <div class="popup-buttons">
-                <button id="save-edit-promotion-btn">Save Changes</button>
-                <button onclick="closeEditModal()">Cancel</button>
+
+    <!-- Modals -->
+    <div id="extend-modal" class="modal">
+        <div class="modal-content">
+            <h3>Extend Promotion</h3>
+            <input type="hidden" id="extend-item">
+            <input type="number" id="extend-hours" placeholder="Additional hours">
+            <div class="modal-actions">
+                <button onclick="saveExtension()">Extend</button>
+                <button onclick="closeModal('extend-modal')">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="price-modal" class="modal">
+        <div class="modal-content">
+            <h3>Change Discount Price</h3>
+            <input type="hidden" id="price-item">
+            <input type="number" id="new-price" placeholder="New price">
+            <div class="modal-actions">
+                <button onclick="savePriceChange()">Save</button>
+                <button onclick="closeModal('price-modal')">Cancel</button>
             </div>
         </div>
     </div>

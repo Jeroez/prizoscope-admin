@@ -1,42 +1,40 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.17.1/firebase-app.js";
-import { getFirestore, collection, addDoc, getDocs, updateDoc, deleteDoc, doc, getDoc, deleteField  } from "https://www.gstatic.com/firebasejs/9.17.1/firebase-firestore.js";
+import { getFirestore, collection, getDocs, addDoc, getDoc, updateDoc, deleteDoc, doc, deleteField, setDoc, query, where } from "https://www.gstatic.com/firebasejs/9.17.1/firebase-firestore.js";
 
+// Firebase Configuration
 const firebaseConfig = {
-  apiKey: "AIzaSyBZjABn7nj9ICjtx8iTf-VMX1PitOQjeiI",
-  authDomain: "prizoscope.firebaseapp.com",
-  projectId: "prizoscope",
-  storageBucket: "prizoscope.firebasestorage.app",
-  messagingSenderId: "495746607948",
-  appId: "1:495746607948:web:42b97c39ffed87f88ebde9",
-  measurementId: "G-L6DGB8KCB9"
+    apiKey: "AIzaSyBZjABn7nj9ICjtx8iTf-VMX1PitOQjeiI",
+    authDomain: "prizoscope.firebaseapp.com",
+    projectId: "prizoscope",
+    storageBucket: "prizoscope.firebasestorage.app",
+    messagingSenderId: "495746607948",
+    appId: "1:495746607948:web:42b97c39ffed87f88ebde9",
+    measurementId: "G-L6DGB8KCB9"
 };
 
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
-const itemsCollection = collection(db, "items");
 
+// Retrieve admin session
+const admin = JSON.parse(sessionStorage.getItem("admin")) || {};
+const isSuperAdmin = admin?.isSuperAdmin || false;
+const adminStore = admin?.Store || null;
 
-document.addEventListener('DOMContentLoaded', () => {
-    const itemGrid = document.getElementById('item-grid');
-    if (!itemGrid) {
-        console.error("Element with ID 'item-grid' not found.");
-        return;
+if (!isSuperAdmin && !adminStore) {
+    alert("Error: No store assigned to this admin.");
+    window.location.href = "login.html"; // Redirect to login if session data is invalid
+}
+
+document.addEventListener('DOMContentLoaded', async () => {
+    await loadItems();
+    if (isSuperAdmin) {
+        await loadStoresForDropdown();
     }
-
-    loadItems();
 });
 
-// Load items from the database and render them
+// Load items from database based on admin role
 async function loadItems() {
     const itemGrid = document.getElementById('item-grid');
-    if (!itemGrid) {
-        console.error("Element with ID 'item-grid' not found.");
-        return;
-    }
-
-    const now = Date.now(); // For promotion expiration checks
-
-    // Reset the item grid
     itemGrid.innerHTML = `
         <div class="card add-card" onclick="showAddPopup()">
             <div class="add-icon">+</div>
@@ -44,63 +42,281 @@ async function loadItems() {
     `;
 
     try {
-        const querySnapshot = await getDocs(itemsCollection);
+        let itemsRef = collection(db, "items");
+        let itemsQuery = isSuperAdmin ? itemsRef : query(itemsRef, where("Store", "==", adminStore));
 
-        querySnapshot.forEach(async (docSnapshot) => {
-            const itemName = docSnapshot.id; // Use the document name as the item's name
+        const querySnapshot = await getDocs(itemsQuery);
+        querySnapshot.forEach(docSnapshot => {
             const data = docSnapshot.data();
+            const itemName = docSnapshot.id;
 
-            // Check for expired promotions
-            if (data.promotion && parseInt(data.promotion.expiration_time) < now) {
-                const itemDocRef = doc(db, "items", itemName);
-                await updateDoc(itemDocRef, { promotion: deleteField() });
-                return;
-            }
+            console.log(`Item: ${itemName}`, data);
 
-            // Render the item card
-            const itemCard = document.createElement('div');
-            itemCard.className = 'card item-card';
+            const storeName = data.Store || data.Store || "Unknown Store";
 
-            const priceHTML = data.promotion
-                ? `<p class="item-price"><s>₱${data.price}</s> <b>₱${data.promotion.discount_price}</b></p>`
+            const now = Date.now();
+            const isPromotionActive = data.promotionExpiration && data.promotionExpiration > now;
+
+            const priceHTML = isPromotionActive
+                ? `<p class="item-price"><s>₱${data.price}</s> <b>₱${data.promotionPrice}</b></p>`
                 : `<p class="item-price">₱${data.price}</p>`;
 
-            const remainingTime = data.promotion
-                ? `<p class="promotion-time">${getTimeRemaining(parseInt(data.promotion.expiration_time))}</p>`
-                : "";
-
+            const itemCard = document.createElement('div');
+            itemCard.className = 'card item-card';
             itemCard.innerHTML = `
                 <img src="${data.img_url}" class="item-image" alt="${itemName}">
                 <h3 class="item-name">${itemName}</h3>
                 ${priceHTML}
-                ${remainingTime}
+                ${isSuperAdmin ? `<p class="store-label">Store: ${storeName}</p>` : ""}
                 <button onclick="editItem('${itemName}')">Edit</button>
                 <button onclick="showDeletePopup('${itemName}')">Delete</button>
                 <button onclick="showPromotionPopup('${itemName}')">Set Promotion</button>
             `;
-
             itemGrid.appendChild(itemCard);
         });
+
     } catch (error) {
         console.error("Error loading items:", error);
-        alert("Failed to load items. Please try again.");
     }
 }
 
-function getTimeRemaining(expirationTime) {
-    const now = Date.now();
-    const diff = expirationTime - now;
 
-    if (diff <= 0) {
-        return "Expired";
+function showPromotionPopup(itemId) {
+    const popup = document.getElementById('promotion-popup');
+
+    if (!popup) {
+        console.error("Promotion popup element not found.");
+        return;
     }
 
-    const hours = Math.floor(diff / (1000 * 60 * 60));
-    const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-    return `${hours}h ${minutes}m remaining`;
+    popup.setAttribute('data-item-id', itemId);
+    popup.style.display = "flex";
 }
 
-// Search functionality for items
+
+async function editItem(itemName) {
+    try {
+        const itemDocRef = doc(db, "items", itemName);
+        const docSnap = await getDoc(itemDocRef);
+
+        if (docSnap.exists()) {
+            const data = docSnap.data();
+
+            document.getElementById('popup-title').textContent = "Edit Item";
+            document.getElementById('item-image').value = data.img_url || "";
+            document.getElementById('item-name').value = itemName;
+            document.getElementById('item-price').value = data.price || "";
+
+            const popup = document.getElementById('add-popup');
+            popup.setAttribute('data-edit-item-id', itemName);
+            popup.style.display = "flex";
+        } else {
+            alert("Item not found!");
+        }
+    } catch (error) {
+        console.error("Error fetching item for editing:", error);
+        alert("Failed to load item.");
+    }
+}
+async function savePromotion() {
+    const popup = document.getElementById('promotion-popup');
+    const itemId = popup.getAttribute('data-item-id');
+    const priceInput = document.getElementById('discount');
+    const durationInput = document.getElementById('duration');
+
+    if (!priceInput || !durationInput) {
+        alert("Error: Promotion input fields not found!");
+        return;
+    }
+
+    let promotionPrice = Number(priceInput.value.trim());
+    let promotionDuration = Number(durationInput.value.trim()); // Duration in hours
+
+    if (!itemId || isNaN(promotionPrice) || promotionPrice <= 0 || isNaN(promotionDuration) || promotionDuration <= 0) {
+        alert("Invalid input. Please enter valid numbers.");
+        return;
+    }
+
+    // ✅ Convert Hours to Milliseconds
+    const expirationTime = Date.now() + promotionDuration * 60 * 60 * 1000;
+
+    try {
+        console.log("Saving promotion:", { itemId, promotionPrice, expirationTime });
+
+        const itemRef = doc(db, "items", itemId);
+        await updateDoc(itemRef, {
+            "promotionPrice": promotionPrice,
+            "promotionExpiration": expirationTime // Save as timestamp
+        });
+
+        alert("Promotion set successfully!");
+        closePromotionPopup();
+    } catch (error) {
+        console.error("Error saving promotion:", error);
+        alert("Failed to save promotion.");
+    }
+}
+
+
+
+
+function closePromotionPopup() {
+    const popup = document.getElementById('promotion-popup');
+    popup.style.display = "none";
+}
+
+async function confirmDeleteItem() {
+    if (!itemToDeleteId) {
+        console.error("No item selected for deletion.");
+        return;
+    }
+
+    if (confirm("Are you sure you want to delete this item?")) {
+        try {
+            await deleteDoc(doc(db, "items", itemToDeleteId));
+            alert("Item deleted successfully!");
+            loadItems();
+            closeDeletePopup();
+        } catch (error) {
+            console.error("Error deleting item:", error);
+        }
+    }
+}
+
+async function loadStoresForDropdown() {
+    setTimeout(() => {
+        const storeDropdown = document.getElementById('store-dropdown');
+
+        if (!storeDropdown) {
+            console.error("ERROR: Store dropdown element not found. Ensure the HTML contains <select id='store-dropdown'> and script is placed at the bottom.");
+            return;
+        }
+
+        storeDropdown.innerHTML = '<option value="">Select Store</option>';
+
+        getDocs(collection(db, "admins"))
+            .then(querySnapshot => {
+                querySnapshot.forEach(docSnapshot => {
+                    const storeName = docSnapshot.id;
+                    const option = document.createElement('option');
+                    option.value = storeName;
+                    option.textContent = storeName;
+                    storeDropdown.appendChild(option);
+                });
+            })
+            .catch(error => {
+                console.error("Error loading stores:", error);
+            });
+    }, 100);
+}
+
+
+
+// Show add/edit popup
+function showAddPopup() {
+    const popup = document.getElementById('add-popup');
+
+    if (!popup) {
+        console.error("Add popup element not found.");
+        return;
+    }
+
+    document.getElementById('popup-title').textContent = "Add New Item";
+    document.getElementById('item-image').value = "";
+    document.getElementById('item-name').value = "";
+    document.getElementById('item-price').value = "";
+
+    if (isSuperAdmin) {
+        const storeDropdown = document.getElementById('store-dropdown');
+        if (storeDropdown) {
+            storeDropdown.style.display = "block";
+        }
+    } else {
+        const storeDropdown = document.getElementById('store-dropdown');
+        if (storeDropdown) {
+            storeDropdown.style.display = "none";
+        }
+    }
+
+    popup.style.display = "flex";
+}
+
+
+// Save item (add or update)
+async function saveItem() {
+    const imgURL = document.getElementById('item-image').value.trim();
+    const name = document.getElementById('item-name').value.trim();
+    const price = document.getElementById('item-price').value.trim();
+    const popup = document.getElementById('add-popup');
+    const editingId = popup.getAttribute('data-editing');
+
+    let store = isSuperAdmin
+        ? document.getElementById('store-dropdown').value
+        : adminStore;
+
+    if (!imgURL || !name || !price || !store) {
+        alert("All fields are required!");
+        return;
+    }
+
+    try {
+        const itemRef = doc(db, "items", name);
+
+        if (editingId) {
+            await updateDoc(itemRef, { img_url: imgURL, price, store });
+            alert("Item updated successfully!");
+        } else {
+            await setDoc(itemRef, { img_url: imgURL, price, store });
+            alert("Item added successfully!");
+        }
+
+        closePopup();
+        loadItems();
+
+    } catch (error) {
+        console.error("Error saving item:", error);
+        alert("Failed to save item.");
+    }
+}
+
+// Delete item
+async function deleteItem(itemId) {
+    if (confirm("Are you sure you want to delete this item?")) {
+        try {
+            await deleteDoc(doc(db, "items", itemId));
+            alert("Item deleted successfully!");
+            loadItems();
+        } catch (error) {
+            console.error("Error deleting item:", error);
+        }
+    }
+}
+
+// Show/close popups
+let itemToDeleteId = null; 
+
+function showDeletePopup(itemId) {
+    itemToDeleteId = itemId;
+    const deletePopup = document.getElementById('delete-popup');
+
+    if (!deletePopup) {
+        console.error("Delete popup element not found.");
+        return;
+    }
+
+    deletePopup.style.display = "flex";
+}
+
+
+function closeDeletePopup() {
+    document.getElementById('delete-popup').style.display = "none";
+    itemToDeleteId = null;
+}
+function closePopup() {
+    document.getElementById('add-popup').style.display = "none";
+}
+
+// Search items
 function searchItems() {
     const searchQuery = document.getElementById('search-bar').value.toLowerCase();
     const itemCards = document.querySelectorAll('.item-card');
@@ -111,208 +327,21 @@ function searchItems() {
     });
 }
 
-// Delete an item by ID
-async function deleteItem(id) {
-    if (confirm("Are you sure you want to delete this item?")) {
-        try {
-            await deleteDoc(doc(db, "items", id));
-            alert("Item deleted successfully!");
-            loadItems(); // Refresh the item list
-        } catch (error) {
-            console.error("Error deleting item: ", error);
-            alert("Failed to delete the item. Please try again.");
-        }
-    }
-}
-
-// Show the Add Item Popup
-function showAddPopup() {
-    const popup = document.getElementById('add-popup');
-    document.getElementById('popup-title').textContent = "Add New Item";
-    document.getElementById('item-image').value = "";
-    document.getElementById('item-name').value = "";
-    document.getElementById('item-price').value = "";
-    popup.style.display = "flex";
-}
-
-// Close the Add Item Popup
-function closePopup() {
-    const popup = document.getElementById('add-popup');
-    popup.style.display = "none";
-}
-
-// Show the Promotion Popup
-function showPromotionPopup(itemId) {
-    const popup = document.getElementById('promotion-popup');
-    popup.setAttribute('data-item-id', itemId); // Attach item ID to popup for context
-    popup.style.display = "flex";
-}
-
-// Close the Promotion Popup
-function closePromotionPopup() {
-    const popup = document.getElementById('promotion-popup');
-    popup.style.display = "none";
-    popup.removeAttribute('data-item-id'); // Clean up after closing
-}
-
-// Save Promotion Details
-async function savePromotion() {
-    const popup = document.getElementById('promotion-popup');
-    const itemId = popup.getAttribute('data-item-id');
-    const discount = document.getElementById('discount').value;
-    const duration = document.getElementById('duration').value;
-
-    if (!discount || !duration) {
-        alert("Please fill out all fields for the promotion!");
-        return;
-    }
-
-    const expirationTime = (Date.now() + parseInt(duration) * 60 * 60 * 1000).toString(); // Convert duration to milliseconds and store as string
-
-    try {
-        const itemDocRef = doc(db, "items", itemId);
-        const promotionData = {
-            discount_price: discount.toString(), // Store as string
-            expiration_time: expirationTime, // Store as string
-        };
-
-        // Save to item
-        await updateDoc(itemDocRef, { promotion: promotionData });
-
-        // Save to promotions collection
-        const promotionsCollection = collection(db, "promotions");
-        await addDoc(promotionsCollection, {
-            item_id: itemId,
-            ...promotionData,
-        });
-
-        alert("Promotion set successfully!");
-        closePromotionPopup();
-        loadItems();
-    } catch (error) {
-        console.error("Error setting promotion:", error);
-        alert("Failed to set promotion. Please try again.");
-    }
-}
-
-let itemToDeleteId = null; // Track the item to delete
-
-function showDeletePopup(itemId) {
-    itemToDeleteId = itemId; // Store the item ID for deletion
-    const deletePopup = document.getElementById('delete-popup');
-    deletePopup.style.display = "flex";
-}
-
-function closeDeletePopup() {
-    const deletePopup = document.getElementById('delete-popup');
-    deletePopup.style.display = "none";
-    itemToDeleteId = null; // Reset the tracked item ID
-}
-
-async function confirmDeleteItem() {
-    if (itemToDeleteId) {
-        try {
-            const itemDocRef = doc(db, "items", itemToDeleteId); // Use item name as the document ID
-            await deleteDoc(itemDocRef);
-            alert("Item deleted successfully!");
-            closeDeletePopup();
-            loadItems(); // Refresh the item list
-        } catch (error) {
-            console.error("Error deleting item:", error);
-            alert("Failed to delete the item. Please try again.");
-        }
-    }
-}
-
-
-async function editItem(itemName) {
-    try {
-        const itemDocRef = doc(db, "items", itemName); // Reference by item name
-        const docSnap = await getDoc(itemDocRef);
-
-        if (docSnap.exists()) {
-            const data = docSnap.data();
-
-            document.getElementById('popup-title').textContent = "Edit Item";
-            document.getElementById('item-image').value = data.img_url || "";
-            document.getElementById('item-name').value = data.name || "";
-            document.getElementById('item-price').value = data.price || "";
-
-            const popup = document.getElementById('add-popup');
-            popup.setAttribute('data-edit-item-id', itemName); // Attach item name for editing
-            popup.style.display = "flex";
-        } else {
-            alert("Item not found!");
-        }
-    } catch (error) {
-        console.error("Error fetching item for editing:", error);
-        alert("Failed to load item. Please try again.");
-    }
-}
-
-
-
-async function saveItem() {
-    const imageInput = document.getElementById('item-image');
-    const nameInput = document.getElementById('item-name');
-    const priceInput = document.getElementById('item-price');
-
-    const imgURL = imageInput.value.trim();
-    const name = nameInput.value.trim();
-    const price = priceInput.value.trim(); // Keep as string
-
-    if (!imgURL || !name || !price) {
-        alert("All fields are required!");
-        return;
-    }
-
-    try {
-        const popup = document.getElementById('add-popup');
-        const editItemName = popup.getAttribute('data-edit-item-id');
-
-        if (editItemName) {
-            // Update existing item
-            const itemDocRef = doc(db, "items", editItemName);
-            await updateDoc(itemDocRef, { img_url: imgURL, price, name });
-            alert("Item updated successfully!");
-            popup.removeAttribute('data-edit-item-id'); // Clear edit context
-        } else {
-            // Add a new item
-            const itemDocRef = doc(db, "items", name); // Use item name as the document ID
-            await setDoc(itemDocRef, { img_url: imgURL, price, name });
-            alert("Item added successfully!");
-        }
-
-        closePopup();
-        loadItems();
-    } catch (error) {
-        console.error("Error saving item:", error);
-        alert("Failed to save item. Please try again.");
-    }
-}
-
-
-
-
-
-
-
-
-
-
-// Attach to globallly
+// Attach functions globally
+window.showDeletePopup = showDeletePopup;
+window.showPromotionPopup = showPromotionPopup;
 window.showAddPopup = showAddPopup;
 window.closePopup = closePopup;
-window.showPromotionPopup = showPromotionPopup;
-window.closePromotionPopup = closePromotionPopup;
-window.editItem = editItem;
+window.saveItem = saveItem;
 window.deleteItem = deleteItem;
 window.showDeletePopup = showDeletePopup;
 window.closeDeletePopup = closeDeletePopup;
-window.confirmDeleteItem = confirmDeleteItem;
 window.searchItems = searchItems;
+window.loadItems = loadItems;
+window.editItem = editItem;
 window.savePromotion = savePromotion;
-window.saveItem = saveItem;
+window.confirmDeleteItem = confirmDeleteItem;
+window.closePromotionPopup = closePromotionPopup;
 
-// Automatically load items on page load
+// Load items on page load
 window.onload = loadItems;

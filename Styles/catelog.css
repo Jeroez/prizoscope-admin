@@ -46,6 +46,21 @@ nav a.active {
     background-color: #2b80ff;
     font-weight: bold;
 }
+#store-dropdown {
+    width: 100%; /* Match the width of input fields */
+    height: 40px; /* Match height */
+    border-radius: 5px; /* Rounded edges */
+    border: 1px solid #ccc; /* Subtle border */
+    background-color: #1E2A47; /* Match background color */
+    color: #ffffff; /* Text color */
+    font-size: 16px; /* Match text size */
+    padding: 10px; /* Proper spacing */
+    outline: none; /* Remove outline */
+}
+
+#store-dropdown:focus {
+    border-color: #007BFF; /* Highlight on focus */
+}
 
 /* Main Content */
 .main-content {
@@ -165,7 +180,7 @@ nav a.active {
     border-radius: 10px;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
     width: 100%;
-    max-width: 400px;
+    max-width: 450px;
     color: #f8f9fa;
 }
 
@@ -196,8 +211,18 @@ nav a.active {
 .popup-buttons {
     display: flex;
     justify-content: space-between;
+    margin-top: 15px;
 }
-
+.popup-buttons button {
+    background-color: #4A90E2; /* Lighter blue */
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    font-size: 16px;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: 0.3s ease;
+}
 .btn {
     padding: 10px 15px;
     border: none;

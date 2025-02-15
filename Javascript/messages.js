@@ -1,6 +1,7 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.17.1/firebase-app.js";
-import { getFirestore, doc, collection, getDocs, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/9.17.1/firebase-firestore.js";
+import { getFirestore, collection, getDocs, getDoc, updateDoc, doc } from "https://www.gstatic.com/firebasejs/9.17.1/firebase-firestore.js";
 
+// Firebase Configuration
 const firebaseConfig = {
     apiKey: "AIzaSyBZjABn7nj9ICjtx8iTf-VMX1PitOQjeiI",
     authDomain: "prizoscope.firebaseapp.com",
@@ -14,6 +15,16 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
+// Retrieve admin session
+const admin = JSON.parse(sessionStorage.getItem("admin")) || {};
+const isSuperAdmin = admin?.isSuperAdmin || false;
+const adminStore = admin?.Store?.[0] || null;
+
+if (!isSuperAdmin && !adminStore) {
+    alert("Error: No store assigned to this admin.");
+    window.location.href = "login.html"; // Redirect to login if session data is invalid
+}
+
 document.addEventListener('DOMContentLoaded', loadUsers);
 
 const userList = document.getElementById('user-list');
@@ -21,101 +32,93 @@ const chatMessages = document.getElementById('chat-messages');
 const chatHeader = document.getElementById('chat-with-user');
 const adminMessageInput = document.getElementById('admin-message');
 
-let selectedUser = null;
+let selectedChat = null;
 
+// Load user chats based on admin access
 async function loadUsers() {
     try {
         const chatsCollection = collection(db, "chats");
-        const chatDocs = await getDocs(chatsCollection);
-
+        const querySnapshot = await getDocs(chatsCollection);
         userList.innerHTML = '';
-        chatDocs.forEach(doc => {
+
+        querySnapshot.forEach(docSnapshot => {
+            const chatDocName = docSnapshot.id;
+            const [userName, chatAdmin] = chatDocName.split(" | ");
+
+            // Super Admin sees all chats; Store Admin sees only their store's chats
+            if (isSuperAdmin || chatAdmin === adminStore) {
+                const userCard = document.createElement('div');
+                userCard.className = 'user-card';
+                userCard.textContent = userName;
+                userCard.addEventListener('click', () => loadMessages(chatDocName));
+                userList.appendChild(userCard);
+            }
+        });
+
+    } catch (error) {
+        console.error("Error loading user chats:", error);
+    }
+}
+
+
+// Load messages for selected user
+async function loadUsers() {
+    try {
+        const chatsCollection = collection(db, "chats");
+        const querySnapshot = await getDocs(chatsCollection);
+        userList.innerHTML = '';
+
+        querySnapshot.forEach(docSnapshot => {
+            const chatDocName = docSnapshot.id;
+            const [userName, chatAdmin] = chatDocName.split(" | ");
+
+            // Create the user card
             const userCard = document.createElement('div');
             userCard.className = 'user-card';
-            userCard.textContent = doc.id;
-            userCard.addEventListener('click', () => loadMessages(doc.id));
+
+            if (isSuperAdmin) {
+                userCard.textContent = chatDocName; 
+            } else if (chatAdmin === adminStore) {
+                userCard.textContent = userName; 
+            } else {
+                return;
+            }
+
+            userCard.addEventListener('click', () => loadMessages(chatDocName));
             userList.appendChild(userCard);
         });
+
     } catch (error) {
-        console.error("Error loading users:", error);
+        console.error("Error loading user chats:", error);
     }
 }
 
-async function loadMessages(userName) {
-    try {
-        selectedUser = userName;
-        chatHeader.textContent = `Chat with ${userName}`;
-        chatMessages.innerHTML = ''; 
 
-        const userDoc = doc(db, "chats", userName);
-        const userChat = await getDoc(userDoc);
-
-        if (userChat.exists()) {
-            const messages = Object.entries(userChat.data());
-
-            messages.sort(([keyA], [keyB]) => extractMessageIndex(keyA) - extractMessageIndex(keyB));
-
-            messages.forEach(([key, value]) => {
-                const messageDiv = document.createElement('div');
-                messageDiv.className = key.startsWith('user_message') ? 'message user-message' : 'message admin-message';
-                
-                if (isImageUrl(value)) {
-                    const imgElement = document.createElement('img');
-                    imgElement.src = value;
-                    imgElement.alt = "Image";
-                    imgElement.className = 'chat-image'; 
-                    messageDiv.appendChild(imgElement);
-                } else {
-                    messageDiv.textContent = value;
-                }
-                
-                chatMessages.appendChild(messageDiv);
-            });
-
-            chatMessages.scrollTop = chatMessages.scrollHeight;
-        } else {
-            chatMessages.innerHTML = '<p>No messages found for this user.</p>';
-        }
-    } catch (error) {
-        console.error("Error loading messages:", error);
-    }
-}
-
-function isImageUrl(url) {
-    return /\.(jpeg|jpg|gif|png|webp|svg)$/.test(url);
-}
-
+// Extract message index from key
 function extractMessageIndex(messageKey) {
     return parseInt(messageKey.split('_').pop(), 10);
 }
 
+// Send admin message
 async function sendAdminMessage() {
     try {
         const adminMessage = adminMessageInput.value.trim();
-        if (!adminMessage || !selectedUser) return;
+        if (!adminMessage || !selectedChat) return;
 
-        const userDoc = doc(db, "chats", selectedUser);
-        const userChat = await getDoc(userDoc);
+        const chatDocRef = doc(db, "chats", selectedChat);
+        const chatSnapshot = await getDoc(chatDocRef);
 
-        const messageCount = Object.keys(userChat.data() || {}).length || 0;
+        const messageCount = Object.keys(chatSnapshot.data() || {}).length || 0;
         const newMessageKey = `admin_message_${messageCount + 1}`;
 
-        await updateDoc(userDoc, { [newMessageKey]: adminMessage });
+        await updateDoc(chatDocRef, { [newMessageKey]: adminMessage });
 
         adminMessageInput.value = '';
-        loadMessages(selectedUser);
+        loadMessages(selectedChat);
     } catch (error) {
         console.error("Error sending message:", error);
     }
 }
 
-function searchUsers() {
-    const query = document.getElementById('search-bar').value.toLowerCase();
-    const userCards = document.querySelectorAll('.user-card');
-
-    userCards.forEach(card => {
-        card.style.display = card.textContent.toLowerCase().includes(query) ? 'block' : 'none';
-    });
-}
-
 window.sendAdminMessage = sendAdminMessage;
+window.loadUsers = loadUsers;
