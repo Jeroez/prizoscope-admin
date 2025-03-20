@@ -13,25 +13,25 @@ body {
     display: flex;
     flex-direction: column;
 }
-
 /* Header */
-.header {
-    background-color: #1d2c4d;
-    padding: 15px 20px;
+header {
+    background-color: #1f2a47;
+    color: white;
+    padding: 1rem 2rem;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    border-bottom: 2px solid #2a3c5b;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
-.site-title {
-    font-size: 1.5rem;
+header h1 {
+    font-size: 1.8rem;
     font-weight: bold;
-    color: white;
 }
 
-.main-navigation {
+nav {
     display: flex;
+    gap: 15px;
 }
 
 nav a {
@@ -51,22 +51,6 @@ nav a.active {
     font-weight: bold;
 }
 
-.header-nav-link {
-    color: white;
-    text-decoration: none;
-    padding: 8px 15px;
-    border-radius: 5px;
-    transition: background-color 0.3s;
-}
-
-.header-nav-link:hover {
-    background-color: #334566;
-}
-
-.header-nav-link.active {
-    background-color: #1e90ff;
-    font-weight: bold;
-}
 
 /* Main Layout */
 .main-layout {
@@ -227,7 +211,39 @@ nav a.active {
     cursor: pointer;
     transition: background-color 0.3s;
 }
+/* Admin messages (right-aligned) */
+.admin-message {
+    color: #ffffff;
+    background-color: #e0e0e0; /* Grey background */
+    align-self: flex-end;
+    text-align: right;
+    padding: 8px 12px;
+    border-radius: 12px;
+    max-width: 70%;
+}
+
+/* User messages (left-aligned) */
+.user-message {
+    background-color: #0084ff; /* Blue background */
+    color: #1f2a47;
+    align-self: flex-start;
+    padding: 8px 12px;
+    border-radius: 12px;
+    max-width: 70%;
+}
+
+/* Image styling */
+.chat-image {
+    max-width: 200px;
+    border-radius: 8px;
+}
 
 .chat-input button:hover {
     background-color: #236adf;
+}
+.message img {
+    max-width: 700px;
+    max-height: 700px;
+    border-radius: 8px; 
+    display: block; 
 }

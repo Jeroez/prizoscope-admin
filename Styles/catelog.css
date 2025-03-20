@@ -19,10 +19,9 @@ header {
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
-
-.header-container {
-    max-width: 1200px;
-    margin: 0 auto;
+header h1 {
+    font-size: 1.8rem;
+    font-weight: bold;
 }
 
 nav {
@@ -46,6 +45,7 @@ nav a.active {
     background-color: #2b80ff;
     font-weight: bold;
 }
+
 #store-dropdown {
     width: 100%; /* Match the width of input fields */
     height: 40px; /* Match height */

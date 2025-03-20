@@ -326,6 +326,10 @@ function searchItems() {
         card.style.display = itemName.includes(searchQuery) ? 'block' : 'none';
     });
 }
+window.logout = () => {
+    sessionStorage.removeItem('admin');
+    window.location.href = "login.html";
+};
 
 // Attach functions globally
 window.showDeletePopup = showDeletePopup;

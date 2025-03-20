@@ -13,14 +13,15 @@ body {
     margin: 0;
 }
 
+/* Header */
 header {
-    background-color: #1d2c4d;
-    color: #ffffff;
-    padding: 20px 10%;
+    background-color: #1f2a47;
+    color: white;
+    padding: 1rem 2rem;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    border-bottom: 3px solid #2a3c5b;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 header h1 {

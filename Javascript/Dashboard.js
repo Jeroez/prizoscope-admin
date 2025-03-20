@@ -102,6 +102,10 @@ async function endPromotion(itemName) {
         console.error("Error ending promotion:", error);
     }
 }
+window.logout = () => {
+    sessionStorage.removeItem('admin');
+    window.location.href = "login.html";
+};
 
 window.loadPromotions = loadPromotions;
 window.endPromotion = endPromotion;
