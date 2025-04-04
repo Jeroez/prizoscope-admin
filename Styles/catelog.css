@@ -162,18 +162,31 @@ nav a.active {
 
 /* Popups */
 .popup {
-    display: none;
     position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0, 0, 0, 0.8);
-    justify-content: center;
-    align-items: center;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: #1f2a47; /* Match theme */
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
     z-index: 1000;
+    display: none; /* Hidden by default */
+    width: 90%;
+    max-width: 450px; /* Prevents it from being too wide */
 }
 
+
+/* Optional: Add a fade-in effect */
+.popup.show {
+    display: block;
+    animation: fadeIn 0.3s ease-in-out;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translate(-50%, -55%); }
+    to { opacity: 1; transform: translate(-50%, -50%); }
+}
 .popup-content {
     background: #1f2a47;
     padding: 20px;
@@ -222,6 +235,27 @@ nav a.active {
     border-radius: 5px;
     cursor: pointer;
     transition: 0.3s ease;
+}
+/* Style the close button */
+.popup .close-btn {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    background: red;
+    color: white;
+    border: none;
+    font-size: 18px;
+    cursor: pointer;
+    padding: 5px 10px;
+    border-radius: 50%;
+    width: 30px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.popup .close-btn:hover {
+    background: darkred;
 }
 .btn {
     padding: 10px 15px;
@@ -272,4 +306,84 @@ nav a.active {
     .popup-content {
         width: 90%;
     }
+}
+/* Reviews Popup - Matches Edit Popup but More Professional */
+#reviews-popup .popup-content {
+    background: #1f2a47;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    width: 100%;
+    max-width: 500px;
+    color: #f8f9fa;
+    text-align: left;
+}
+
+#reviews-popup h2 {
+    font-size: 24px;
+    font-weight: bold;
+    margin-bottom: 15px;
+    border-bottom: 2px solid #2b80ff;
+    padding-bottom: 10px;
+}
+
+/* Scrollable Reviews Container */
+#reviews-container {
+    max-height: 300px;
+    overflow-y: auto;
+    padding-right: 10px;
+}
+
+/* Individual Review Card */
+.review-card {
+    background: #283759;
+    padding: 10px;
+    border-radius: 5px;
+    margin-bottom: 10px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.review-card .reviewer-name {
+    font-weight: bold;
+    color: #1e90ff;
+    font-size: 16px;
+}
+
+.review-card .review-date {
+    font-size: 12px;
+    color: #adb5bd;
+    margin-bottom: 5px;
+}
+
+.review-card .review-text {
+    font-size: 14px;
+    color: #f8f9fa;
+}
+
+/* Close Button Styling */
+#reviews-popup .close-btn {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    font-size: 24px;
+    cursor: pointer;
+    color: #f8f9fa;
+}
+
+#reviews-popup .close-btn:hover {
+    color: #dc3545;
+}
+
+/* Scrollbar Customization */
+#reviews-container::-webkit-scrollbar {
+    width: 6px;
+}
+
+#reviews-container::-webkit-scrollbar-track {
+    background: #1f2a47;
+}
+
+#reviews-container::-webkit-scrollbar-thumb {
+    background: #1e90ff;
+    border-radius: 3px;
 }

@@ -26,15 +26,20 @@ if (!isSuperAdmin && !adminStore) {
 }
 
 document.addEventListener('DOMContentLoaded', async () => {
-    await loadItems();
-    if (isSuperAdmin) {
-        await loadStoresForDropdown();
+    if (!window.itemsLoaded) { // ✅ Ensure it runs only once
+        window.itemsLoaded = true;
+        await loadItems();
+        if (isSuperAdmin) {
+            await loadStoresForDropdown();
+        }
     }
 });
 
 // Load items from database based on admin role
 async function loadItems() {
     const itemGrid = document.getElementById('item-grid');
+
+    // ✅ Ensure itemGrid is emptied before adding new items
     itemGrid.innerHTML = `
         <div class="card add-card" onclick="showAddPopup()">
             <div class="add-icon">+</div>
@@ -43,17 +48,20 @@ async function loadItems() {
 
     try {
         let itemsRef = collection(db, "items");
-        let itemsQuery = isSuperAdmin ? itemsRef : query(itemsRef, where("Store", "==", adminStore));
+        let itemsQuery = isSuperAdmin ? query(itemsRef) : query(itemsRef, where("Store", "==", adminStore));
 
         const querySnapshot = await getDocs(itemsQuery);
+
+        const processedItems = new Set(); // Track processed items to avoid duplicates
+
         querySnapshot.forEach(docSnapshot => {
             const data = docSnapshot.data();
             const itemName = docSnapshot.id;
 
-            console.log(`Item: ${itemName}`, data);
+            if (processedItems.has(itemName)) return; // ✅ Prevent duplicate items
+            processedItems.add(itemName);
 
-            const storeName = data.Store || data.Store || "Unknown Store";
-
+            const storeName = data.Store || "Unknown Store";
             const now = Date.now();
             const isPromotionActive = data.promotionExpiration && data.promotionExpiration > now;
 
@@ -63,20 +71,120 @@ async function loadItems() {
 
             const itemCard = document.createElement('div');
             itemCard.className = 'card item-card';
+
             itemCard.innerHTML = `
-                <img src="${data.img_url}" class="item-image" alt="${itemName}">
-                <h3 class="item-name">${itemName}</h3>
-                ${priceHTML}
-                ${isSuperAdmin ? `<p class="store-label">Store: ${storeName}</p>` : ""}
-                <button onclick="editItem('${itemName}')">Edit</button>
-                <button onclick="showDeletePopup('${itemName}')">Delete</button>
-                <button onclick="showPromotionPopup('${itemName}')">Set Promotion</button>
+                <div class="item-content">
+                    <img src="${data.img_url}" class="item-image" alt="${itemName}">
+                    <h3 class="item-name">${itemName}</h3>
+                    ${priceHTML}
+                    ${isSuperAdmin ? `<p class="store-label">Store: ${storeName}</p>` : ""}
+                </div>
+                <button onclick="editItem(event, '${itemName}')">Edit</button>
+                <button onclick="showDeletePopup(event, '${itemName}')">Delete</button>
+                <button onclick="showPromotionPopup(event, '${itemName}')">Set Promotion</button>
             `;
+
+            itemCard.querySelector('.item-content').addEventListener("click", () => showReviewsPopup(itemName));
+
             itemGrid.appendChild(itemCard);
         });
 
     } catch (error) {
         console.error("Error loading items:", error);
+    }
+}
+
+// Function to fetch and display reviews for the selected item
+async function showItemReviews(itemName) {
+    const reviewsPopup = document.getElementById("reviews-popup");
+    const reviewsTitle = document.getElementById("reviews-title");
+    const reviewsContainer = document.getElementById("reviews-container");
+
+    if (!reviewsPopup || !reviewsContainer || !reviewsTitle) {
+        console.error("Error: reviews popup elements not found!");
+        return;
+    }
+
+    // Set the title
+    reviewsTitle.innerText = `Reviews for ${itemName}`;
+    reviewsContainer.innerHTML = `<p>Loading reviews...</p>`; // Reset reviews
+
+    try {
+        const reviewsRef = collection(db, "reviews");
+        const querySnapshot = await getDocs(reviewsRef);
+
+        let reviewsHTML = "";
+
+        querySnapshot.forEach((doc) => {
+            const reviewData = doc.data();
+            if (reviewData.itemName === itemName) {
+                reviewsHTML += `
+                    <div class="review-card">
+                        <p><strong>${reviewData.user}:</strong> ${reviewData.comment}</p>
+                        <p>Rating: ⭐${reviewData.rating}</p>
+                    </div>
+                `;
+            }
+        });
+
+        reviewsContainer.innerHTML = reviewsHTML || `<p>No reviews for this item yet.</p>`;
+
+    } catch (error) {
+        console.error("Error fetching reviews:", error);
+        reviewsContainer.innerHTML = `<p>Error loading reviews.</p>`;
+    }
+
+    // Show the popup
+    reviewsPopup.style.display = "block";
+}
+// Show the reviews popup
+async function showReviewsPopup(itemName) {
+    const reviewsPopup = document.getElementById("reviews-popup");
+    const reviewsTitle = document.getElementById("reviews-title");
+    const reviewsContainer = document.getElementById("reviews-container");
+
+    if (!reviewsPopup || !reviewsContainer || !reviewsTitle) {
+        console.error("Error: reviews popup elements not found!");
+        return;
+    }
+
+    // Set the title
+    reviewsTitle.innerText = `Reviews for ${itemName}`;
+    reviewsContainer.innerHTML = `<p>Loading reviews...</p>`; // Reset content
+
+    try {
+        const reviewsRef = collection(db, "reviews");
+        const reviewsQuery = query(reviewsRef, where("itemName", "==", itemName));
+        const querySnapshot = await getDocs(reviewsQuery);
+
+        let reviewsHTML = "";
+        querySnapshot.forEach((doc) => {
+            const reviewData = doc.data();
+            reviewsHTML += `
+                <div class="review-card">
+                    <p><strong>${reviewData.user}:</strong> ${reviewData.comment}</p>
+                    <p>Rating: ⭐${reviewData.rating}</p>
+                </div>
+            `;
+        });
+
+        reviewsContainer.innerHTML = reviewsHTML || `<p>No reviews for this item yet.</p>`;
+    } catch (error) {
+        console.error("Error fetching reviews:", error);
+        reviewsContainer.innerHTML = `<p>Error loading reviews.</p>`;
+    }
+
+    // Show the popup
+    reviewsPopup.style.display = "block";
+}
+
+// Close the reviews popup
+function closeReviewsPopup() {
+    const reviewsPopup = document.getElementById("reviews-popup");
+    if (reviewsPopup) {
+        reviewsPopup.style.display = "none";
+    } else {
+        console.error("closeReviewsPopup: reviews-popup element not found!");
     }
 }
 
@@ -167,19 +275,22 @@ function closePromotionPopup() {
 
 async function confirmDeleteItem() {
     if (!itemToDeleteId) {
-        console.error("No item selected for deletion.");
+        console.error("Error: No item selected for deletion.");
         return;
     }
 
-    if (confirm("Are you sure you want to delete this item?")) {
-        try {
-            await deleteDoc(doc(db, "items", itemToDeleteId));
-            alert("Item deleted successfully!");
-            loadItems();
-            closeDeletePopup();
-        } catch (error) {
-            console.error("Error deleting item:", error);
-        }
+    try {
+        await deleteDoc(doc(db, "items", itemToDeleteId)); // ✅ Delete from Firestore
+        alert("Item deleted successfully!");
+
+        closeDeletePopup(); // ✅ Close popup first
+        await loadItems();  // ✅ Reload items to reflect deletion
+
+        itemToDeleteId = null; // ✅ Clear the stored ID
+
+    } catch (error) {
+        console.error("Error deleting item:", error);
+        alert("Failed to delete item. Please try again.");
     }
 }
 
@@ -250,11 +361,11 @@ async function saveItem() {
     const popup = document.getElementById('add-popup');
     const editingId = popup.getAttribute('data-editing');
 
-    let store = isSuperAdmin
+    let Store = isSuperAdmin
         ? document.getElementById('store-dropdown').value
         : adminStore;
 
-    if (!imgURL || !name || !price || !store) {
+    if (!imgURL || !name || !price || !Store) {
         alert("All fields are required!");
         return;
     }
@@ -263,10 +374,10 @@ async function saveItem() {
         const itemRef = doc(db, "items", name);
 
         if (editingId) {
-            await updateDoc(itemRef, { img_url: imgURL, price, store });
+            await updateDoc(itemRef, { img_url: imgURL, price, Store });
             alert("Item updated successfully!");
         } else {
-            await setDoc(itemRef, { img_url: imgURL, price, store });
+            await setDoc(itemRef, { img_url: imgURL, price, Store });
             alert("Item added successfully!");
         }
 
@@ -295,12 +406,14 @@ async function deleteItem(itemId) {
 // Show/close popups
 let itemToDeleteId = null; 
 
-function showDeletePopup(itemId) {
+function showDeletePopup(event, itemId) {
+    event.stopPropagation(); // ✅ Prevents accidental event bubbling
+
     itemToDeleteId = itemId;
     const deletePopup = document.getElementById('delete-popup');
 
     if (!deletePopup) {
-        console.error("Delete popup element not found.");
+        console.error("Error: Delete popup element not found.");
         return;
     }
 
@@ -308,10 +421,19 @@ function showDeletePopup(itemId) {
 }
 
 
+
 function closeDeletePopup() {
-    document.getElementById('delete-popup').style.display = "none";
-    itemToDeleteId = null;
+    const deletePopup = document.getElementById('delete-popup');
+    
+    if (!deletePopup) {
+        console.error("Error: Delete popup element not found.");
+        return;
+    }
+
+    deletePopup.style.display = "none";
+    itemToDeleteId = null; // ✅ Clear the stored ID when closing
 }
+
 function closePopup() {
     document.getElementById('add-popup').style.display = "none";
 }
@@ -346,6 +468,5 @@ window.editItem = editItem;
 window.savePromotion = savePromotion;
 window.confirmDeleteItem = confirmDeleteItem;
 window.closePromotionPopup = closePromotionPopup;
-
-// Load items on page load
-window.onload = loadItems;
+window.closeReviewsPopup = closeReviewsPopup;
+window.showReviewsPopup = showReviewsPopup;
