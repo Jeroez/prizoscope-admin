@@ -25,7 +25,7 @@ const db = getFirestore(app);
 const sessionData = JSON.parse(sessionStorage.getItem('admin'));
 if (!sessionData || !sessionData.isSuperAdmin) {
     alert("Unauthorized access!");
-    window.location.href = "login.html";
+    window.location.href = "index.html";
 }
 
 // Load existing admins
@@ -90,7 +90,7 @@ window.deleteAdmin = async (adminId) => {
 // Logout
 window.logout = () => {
     sessionStorage.removeItem('admin');
-    window.location.href = "login.html";
+    window.location.href = "index.html";
 };
 
 // Initial load

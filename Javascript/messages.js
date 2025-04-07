@@ -22,7 +22,7 @@ const adminStore = admin?.Store?.[0] || null;
 
 if (!isSuperAdmin && !adminStore) {
     alert("Error: No store assigned to this admin.");
-    window.location.href = "login.html"; // Redirect to login if session data is invalid
+    window.location.href = "index.html"; // Redirect to login if session data is invalid
 }
 
 document.addEventListener('DOMContentLoaded', loadUsers);
@@ -162,7 +162,7 @@ async function sendAdminMessage() {
 
 window.logout = () => {
     sessionStorage.removeItem('admin');
-    window.location.href = "login.html";
+    window.location.href = "index.html";
 };
 
 
