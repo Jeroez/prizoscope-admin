@@ -26,7 +26,7 @@ if (!isSuperAdmin && !adminStore) {
 }
 
 document.addEventListener('DOMContentLoaded', async () => {
-    if (!window.itemsLoaded) { // ✅ Ensure it runs only once
+    if (!window.itemsLoaded) { //  Ensure it runs only once
         window.itemsLoaded = true;
         await loadItems();
         if (isSuperAdmin) {
@@ -36,10 +36,10 @@ document.addEventListener('DOMContentLoaded', async () => {
 });
 
 // Load items from database based on admin role
+// Load items from database based on admin role
 async function loadItems() {
     const itemGrid = document.getElementById('item-grid');
 
-    // ✅ Ensure itemGrid is emptied before adding new items
     itemGrid.innerHTML = `
         <div class="card add-card" onclick="showAddPopup()">
             <div class="add-icon">+</div>
@@ -48,25 +48,27 @@ async function loadItems() {
 
     try {
         let itemsRef = collection(db, "items");
-        let itemsQuery = isSuperAdmin ? query(itemsRef) : query(itemsRef, where("Store", "==", adminStore));
+        let itemsQuery = isSuperAdmin
+            ? query(itemsRef)
+            : query(itemsRef, where("Store", "==", adminStore));
 
         const querySnapshot = await getDocs(itemsQuery);
-
-        const processedItems = new Set(); // Track processed items to avoid duplicates
+        const processedItems = new Set();
 
         querySnapshot.forEach(docSnapshot => {
+            const itemId = docSnapshot.id;
             const data = docSnapshot.data();
-            const itemName = docSnapshot.id;
+            const itemName = data.name || itemId;
 
-            if (processedItems.has(itemName)) return; // ✅ Prevent duplicate items
-            processedItems.add(itemName);
+            if (processedItems.has(itemId)) return;
+            processedItems.add(itemId);
 
             const storeName = data.Store || "Unknown Store";
             const now = Date.now();
             const isPromotionActive = data.promotionExpiration && data.promotionExpiration > now;
 
             const priceHTML = isPromotionActive
-                ? `<p class="item-price"><s>₱${data.price}</s> <b>₱${data.promotionPrice}</b></p>`
+                ? `<p class="item-price"><s>₱${data.originalPrice}</s> <b>₱${data.price}</b></p>`
                 : `<p class="item-price">₱${data.price}</p>`;
 
             const itemCard = document.createElement('div');
@@ -79,13 +81,12 @@ async function loadItems() {
                     ${priceHTML}
                     ${isSuperAdmin ? `<p class="store-label">Store: ${storeName}</p>` : ""}
                 </div>
-                <button onclick="editItem(event, '${itemName}')">Edit</button>
-                <button onclick="showDeletePopup(event, '${itemName}')">Delete</button>
-                <button onclick="showPromotionPopup(event, '${itemName}')">Set Promotion</button>
+                <button onclick="editItem('${itemId}')">Edit</button>
+                <button onclick="showDeletePopup(event, '${itemId}')">Delete</button>
+                <button onclick="showPromotionPopup('${itemId}')">Set Promotion</button>
             `;
 
             itemCard.querySelector('.item-content').addEventListener("click", () => showReviewsPopup(itemName));
-
             itemGrid.appendChild(itemCard);
         });
 
@@ -188,6 +189,12 @@ function closeReviewsPopup() {
     }
 }
 
+let selectedItemId = null;
+
+function openPromotionPopup(itemId) {
+  selectedItemId = itemId;
+  document.getElementById("promotion-popup").style.display = "block";
+}
 
 function showPromotionPopup(itemId) {
     const popup = document.getElementById('promotion-popup');
@@ -202,9 +209,9 @@ function showPromotionPopup(itemId) {
 }
 
 
-async function editItem(itemName) {
+async function editItem(itemId) {
     try {
-        const itemDocRef = doc(db, "items", itemName);
+        const itemDocRef = doc(db, "items", String(itemId)); // Use actual document ID
         const docSnap = await getDoc(itemDocRef);
 
         if (docSnap.exists()) {
@@ -212,11 +219,11 @@ async function editItem(itemName) {
 
             document.getElementById('popup-title').textContent = "Edit Item";
             document.getElementById('item-image').value = data.img_url || "";
-            document.getElementById('item-name').value = itemName;
+            document.getElementById('item-name').value = data.name || "";
             document.getElementById('item-price').value = data.price || "";
 
             const popup = document.getElementById('add-popup');
-            popup.setAttribute('data-edit-item-id', itemName);
+            popup.setAttribute('data-edit-item-id', String(itemId));
             popup.style.display = "flex";
         } else {
             alert("Item not found!");
@@ -226,45 +233,76 @@ async function editItem(itemName) {
         alert("Failed to load item.");
     }
 }
+
+// Save promotion and schedule expiration
 async function savePromotion() {
-    const popup = document.getElementById('promotion-popup');
-    const itemId = popup.getAttribute('data-item-id');
-    const priceInput = document.getElementById('discount');
-    const durationInput = document.getElementById('duration');
-
-    if (!priceInput || !durationInput) {
-        alert("Error: Promotion input fields not found!");
-        return;
-    }
-
-    let promotionPrice = Number(priceInput.value.trim());
-    let promotionDuration = Number(durationInput.value.trim()); // Duration in hours
-
-    if (!itemId || isNaN(promotionPrice) || promotionPrice <= 0 || isNaN(promotionDuration) || promotionDuration <= 0) {
-        alert("Invalid input. Please enter valid numbers.");
-        return;
-    }
-
-    // ✅ Convert Hours to Milliseconds
-    const expirationTime = Date.now() + promotionDuration * 60 * 60 * 1000;
-
     try {
-        console.log("Saving promotion:", { itemId, promotionPrice, expirationTime });
+        const popup = document.getElementById('promotion-popup');
+        const itemId = String(popup.getAttribute('data-item-id'));
+        const discountPrice = document.getElementById('discount').value.trim();
+        const durationHours = document.getElementById('duration').value.trim();
+
+        if (!itemId || !discountPrice || !durationHours) {
+            alert("All fields are required!");
+            return;
+        }
+
+        const numericDiscount = parseFloat(discountPrice);
+        const numericDuration = parseInt(durationHours);
+        if (isNaN(numericDiscount) || isNaN(numericDuration)) {
+            alert("Invalid number format!");
+            return;
+        }
+
+        const durationMs = numericDuration * 60 * 60 * 1000;
+        const promotionExpiration = Date.now() + durationMs;
 
         const itemRef = doc(db, "items", itemId);
+        const docSnap = await getDoc(itemRef);
+        if (!docSnap.exists()) {
+            alert("Item does not exist!");
+            return;
+        }
+
+        const itemData = docSnap.data();
+        const originalPrice = itemData.price;
+
+        // Update item with promo data
         await updateDoc(itemRef, {
-            "promotionPrice": promotionPrice,
-            "promotionExpiration": expirationTime // Save as timestamp
+            originalPrice: originalPrice,
+            price: numericDiscount,
+            promotionPrice: numericDiscount,
+            promotionExpiration: promotionExpiration
         });
 
-        alert("Promotion set successfully!");
+        alert("Promotion saved successfully!");
         closePromotionPopup();
+        await loadItems();
+
+        // Revert price after promotion ends
+        setTimeout(async () => {
+            try {
+                const latestSnap = await getDoc(itemRef);
+                const latestData = latestSnap.data();
+
+                if (latestData.promotionExpiration === promotionExpiration) {
+                    await updateDoc(itemRef, {
+                        price: latestData.originalPrice || numericDiscount,
+                        originalPrice: deleteField()
+                    });
+                    console.log(`Promotion expired for item: ${itemId}`);
+                    await loadItems();
+                }
+            } catch (error) {
+                console.error("Error reverting price after promotion:", error);
+            }
+        }, durationMs);
+
     } catch (error) {
         console.error("Error saving promotion:", error);
-        alert("Failed to save promotion.");
+        alert(`Failed to save promotion: ${error.message}`);
     }
 }
-
 
 
 
@@ -280,13 +318,13 @@ async function confirmDeleteItem() {
     }
 
     try {
-        await deleteDoc(doc(db, "items", itemToDeleteId)); // ✅ Delete from Firestore
+        await deleteDoc(doc(db, "items", itemToDeleteId)); //  Delete from Firestore
         alert("Item deleted successfully!");
 
-        closeDeletePopup(); // ✅ Close popup first
-        await loadItems();  // ✅ Reload items to reflect deletion
+        closeDeletePopup(); //  Close popup first
+        await loadItems();  //  Reload items to reflect deletion
 
-        itemToDeleteId = null; // ✅ Clear the stored ID
+        itemToDeleteId = null; //  Clear the stored ID
 
     } catch (error) {
         console.error("Error deleting item:", error);
@@ -357,9 +395,9 @@ function showAddPopup() {
 async function saveItem() {
     const imgURL = document.getElementById('item-image').value.trim();
     const name = document.getElementById('item-name').value.trim();
-    const price = document.getElementById('item-price').value.trim();
+    const price = parseFloat(document.getElementById('item-price').value.trim());
     const popup = document.getElementById('add-popup');
-    const editingId = popup.getAttribute('data-editing');
+    const editingId = popup.getAttribute('data-edit-item-id');
 
     let Store = isSuperAdmin
         ? document.getElementById('store-dropdown').value
@@ -371,24 +409,34 @@ async function saveItem() {
     }
 
     try {
-        const itemRef = doc(db, "items", name);
+        const docId = name; // Use product name as document ID
+        const itemRef = doc(db, "items", docId);
+
+        const baseItemData = {
+            name,
+            img_url: imgURL,
+            price,
+            Store,
+            rating: "5"
+        };
 
         if (editingId) {
-            await updateDoc(itemRef, { img_url: imgURL, price, Store });
+            await updateDoc(itemRef, baseItemData);
             alert("Item updated successfully!");
         } else {
-            await setDoc(itemRef, { img_url: imgURL, price, Store });
+            await setDoc(itemRef, baseItemData);
             alert("Item added successfully!");
         }
 
         closePopup();
-        loadItems();
+        await loadItems();
 
     } catch (error) {
         console.error("Error saving item:", error);
         alert("Failed to save item.");
     }
 }
+
 
 // Delete item
 async function deleteItem(itemId) {

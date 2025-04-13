@@ -18,7 +18,7 @@ const db = getFirestore(app);
 // Retrieve admin session
 const admin = JSON.parse(sessionStorage.getItem("admin")) || {};
 const isSuperAdmin = admin?.isSuperAdmin || false;
-const adminStore = admin?.Store?.[0] || null;
+const adminStore = admin?.Store || null;
 
 if (!isSuperAdmin && !adminStore) {
     alert("Error: No store assigned to this admin.");
@@ -43,14 +43,17 @@ async function loadUsers() {
 
         querySnapshot.forEach(docSnapshot => {
             const chatDocName = docSnapshot.id;
-            const [userName, chatAdmin] = chatDocName.split(" | ");
+            const [userName, chatAdmin] = chatDocName.split("|").map(str => str.trim());
 
-            // ✅ Allow normal admins to see chats where they are the admin OR the user
             if (isSuperAdmin || chatAdmin === adminStore || userName === adminStore) {
                 const userCard = document.createElement('div');
                 userCard.className = 'user-card';
-                userCard.textContent = userName;
-                userCard.addEventListener('click', () => loadMessages(chatDocName));
+                userCard.textContent = isSuperAdmin ? chatDocName : userName;
+
+                userCard.addEventListener('click', () => {
+                    loadMessages(chatDocName);
+                });
+
                 userList.appendChild(userCard);
             }
         });
@@ -59,6 +62,7 @@ async function loadUsers() {
         console.error("Error loading user chats:", error);
     }
 }
+
 
 
 // Load messages for selected user
@@ -70,9 +74,13 @@ async function loadMessages(chatId) {
 
         chatMessages.innerHTML = "";
         chatHeader.textContent = `Chat with ${chatId.split(" | ")[0]}`;
-
+        
+        if (!chatSnapshot.exists()) {
+            console.error("Chat not found or no access.");
+            return;
+        }
         const messages = chatSnapshot.data() || {};
-        const sortedMessages = Object.entries(messages).sort(([keyA], [keyB]) =>
+                const sortedMessages = Object.entries(messages).sort(([keyA], [keyB]) =>
             extractMessageIndex(keyA) - extractMessageIndex(keyB)
         );
 
@@ -93,14 +101,14 @@ function displayMessage(message, sender) {
     messageElement.classList.add("message", sender === "admin" ? "admin-message" : "user-message");
 
     if (typeof message === "object" && message.type === "image") {
-        // ✅ Handle images properly
+        //  Handle images properly
         const image = document.createElement("img");
         image.src = message.content;
         image.alt = "Sent Image";
         image.classList.add("chat-image");
         messageElement.appendChild(image);
     } else {
-        // ✅ Handle text messages
+        // Handle text messages
         messageElement.textContent = typeof message === "string" ? message : message.content;
     }
 
@@ -112,7 +120,7 @@ function displayMessage(message, sender) {
 
 // Check if URL is an image
 function isValidImageUrl(url) {
-    // ✅ Remove Discord’s temporary tokens
+    // Remove Discord’s temporary tokens
     if (url.includes("discordapp.com/attachments/")) {
         url = url.split("?")[0]; // Removes everything after `?`
     }
@@ -131,7 +139,7 @@ async function sendAdminMessage() {
         const adminMessage = adminMessageInput.value.trim();
         if (!adminMessage || !selectedChat) return;
 
-        // ✅ Prevent normal admins from sending messages to unauthorized chats
+        // Prevent normal admins from sending messages to unauthorized chats
         const [userName, chatAdmin] = selectedChat.split(" | ");
         if (!isSuperAdmin && chatAdmin !== adminStore) {
             alert("You do not have permission to send messages in this chat.");
