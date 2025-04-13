@@ -1,6 +1,6 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.17.1/firebase-app.js";
-import { 
-    getFirestore, collection, getDocs, doc, updateDoc, deleteField, query, where 
+import {
+    getFirestore, collection, getDocs, doc, updateDoc, deleteField, getDoc, query, where
 } from "https://www.gstatic.com/firebasejs/9.17.1/firebase-firestore.js";
 
 // Firebase Configuration
@@ -17,74 +17,108 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-// Retrieve admin session
+// Admin session
 const admin = JSON.parse(sessionStorage.getItem("admin")) || {};
 const isSuperAdmin = admin?.isSuperAdmin || false;
-const adminStore = admin?.Store?.[0] || null;
+const adminStore = admin?.Store || null;
+
+console.log("Admin Session:", admin);
+console.log("isSuperAdmin:", isSuperAdmin);
+console.log("adminStore:", adminStore);
 
 if (!isSuperAdmin && !adminStore) {
     alert("Error: No store assigned to this admin.");
-    window.location.href = "index.html"; // Redirect to login if session data is invalid
+    window.location.href = "index.html";
 }
 
 document.addEventListener('DOMContentLoaded', loadPromotions);
 
-// Load promotions based on admin access
+// Load promotions
 async function loadPromotions() {
     const activePromotions = document.getElementById('active-promotions');
     const pastPromotions = document.getElementById('past-promotions');
+
+    if (!activePromotions || !pastPromotions) {
+        console.error("Error: Promotion containers not found in HTML.");
+        return;
+    }
 
     activePromotions.innerHTML = '';
     pastPromotions.innerHTML = '';
 
     try {
-        let promotionsQuery = collection(db, "items");
+        let itemsRef = collection(db, "items");
+        let itemsQuery = isSuperAdmin
+            ? itemsRef
+            : query(itemsRef, where("Store", "==", adminStore));
 
-        // Super Admin sees all promotions; Store Admin sees only their store's promotions
-        if (!isSuperAdmin) {
-            promotionsQuery = query(promotionsQuery, where("store", "==", adminStore));
-        }
+        console.log("Running query to fetch items...");
 
-        const querySnapshot = await getDocs(promotionsQuery);
+        const querySnapshot = await getDocs(itemsQuery);
+        console.log(`Fetched ${querySnapshot.size} item(s) from Firestore.`);
+
         const now = Date.now();
 
-        querySnapshot.forEach(docSnapshot => {
-            const data = docSnapshot.data();
-            if (!data.promotion) return;
+        querySnapshot.forEach(docSnap => {
+            const itemId = docSnap.id;
+            const data = docSnap.data();
 
-            const promotionCard = createPromotionCard(docSnapshot.id, data);
-            const isExpired = parseInt(data.promotion.expiration_time) < now;
+            console.log(`\n🧾 Item: ${itemId}`, data);
 
-            isExpired ? pastPromotions.appendChild(promotionCard) : activePromotions.appendChild(promotionCard);
+            if (!data.promotionPrice || !data.promotionExpiration) {
+                console.warn(`⚠️ Skipping ${itemId} — Missing fields:`, {
+                    promotionPrice: data.promotionPrice,
+                    promotionExpiration: data.promotionExpiration
+                });
+                return;
+            }
+
+            const isExpired = Number(data.promotionExpiration) < now;
+            const card = createPromotionCard(itemId, data, isExpired);
+
+            if (isExpired) {
+                console.log(`⏰ ${itemId} is expired.`);
+                pastPromotions.appendChild(card);
+            } else {
+                console.log(`✅ ${itemId} is active.`);
+                activePromotions.appendChild(card);
+            }
         });
 
-    } catch (error) {
-        console.error("Error loading promotions:", error);
+    } catch (err) {
+        console.error("❌ Error loading promotions:", err);
     }
 }
 
 // Create a promotion card
-function createPromotionCard(itemName, itemData) {
+function createPromotionCard(itemName, itemData, isExpired) {
     const card = document.createElement('div');
     card.className = 'promotion-card';
-    
+
+    const expirationText = getTimeRemaining(itemData.promotionExpiration);
+    const original = itemData.originalPrice ?? "Not Available";
+    const current = itemData.price;
+
     card.innerHTML = `
         <div class="promotion-details">
             <h3>${itemName}</h3>
-            <p>Original Price: ₱${itemData.price}</p>
-            <p>Discount Price: ₱${itemData.promotion.discount_price}</p>
-            <p>${getTimeRemaining(parseInt(itemData.promotion.expiration_time))}</p>
+            <p>Original Price: ₱${original}</p>
+            <p>Discount Price: ₱${current}</p>
+            <p>${expirationText}</p>
         </div>
-        ${isSuperAdmin ? `<button onclick="endPromotion('${itemName}')">End Promotion</button>` : ''}
+        ${isSuperAdmin && !isExpired
+            ? `<button onclick="endPromotion('${itemName}')">End Promotion</button>`
+            : ''
+        }
     `;
-
     return card;
 }
 
 // Get time remaining
-function getTimeRemaining(expirationTime) {
+function getTimeRemaining(expiration) {
     const now = Date.now();
-    const diff = expirationTime - now;
+    const diff = Number(expiration) - now;
+
     if (diff <= 0) return "Expired";
 
     const hours = Math.floor(diff / (1000 * 60 * 60));
@@ -95,13 +129,35 @@ function getTimeRemaining(expirationTime) {
 // End a promotion (Super Admin only)
 async function endPromotion(itemName) {
     if (!isSuperAdmin) return;
+
     try {
-        await updateDoc(doc(db, "items", itemName), { promotion: deleteField() });
+        const itemRef = doc(db, "items", itemName);
+        const itemSnap = await getDoc(itemRef);
+
+        if (!itemSnap.exists()) {
+            console.warn(`❌ Item ${itemName} not found in Firestore.`);
+            return;
+        }
+
+        const data = itemSnap.data();
+        const updates = {
+            promotionExpiration: deleteField(),
+            originalPrice: deleteField()
+        };
+
+        if (data.originalPrice) {
+            updates.price = data.originalPrice;
+        }
+
+        await updateDoc(itemRef, updates);
+        console.log(`✅ Promotion ended for item: ${itemName}`);
         loadPromotions();
-    } catch (error) {
-        console.error("Error ending promotion:", error);
+
+    } catch (err) {
+        console.error(`❌ Failed to end promotion for ${itemName}:`, err);
     }
 }
+
 window.logout = () => {
     sessionStorage.removeItem('admin');
     window.location.href = "index.html";
